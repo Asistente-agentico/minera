@@ -1,0 +1,11 @@
+# Usar con: dbt run --profiles-dir .
+# O copiar a ~/.dbt/profiles.yml
+
+minera_prueba:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('MINERA_DB_PATH', '/home/jl/Dev/minera/datos/minera.duckdb') }}"
+      schema: main
+      threads: 4

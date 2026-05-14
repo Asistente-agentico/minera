@@ -1,0 +1,6 @@
+nivel,concentracion_min_mg_m3,concentracion_max_mg_m3,color,etiqueta,es_sobre_limite_interno
+1,0.00,0.25,azul,bajo,false
+2,0.25,0.50,verde,controlado,false
+3,0.50,2.50,amarillo,alerta,false
+4,2.50,5.00,rojo,peligroso,true
+5,5.00,,negro,critico,true

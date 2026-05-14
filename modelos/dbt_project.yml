@@ -1,0 +1,38 @@
+name: minera_prueba
+version: "0.1.0"
+config-version: 2
+
+profile: minera_prueba
+
+model-paths:    ["models"]
+macro-paths:    ["macros"]
+seed-paths:     ["seeds"]
+snapshot-paths: ["snapshots"]
+target-path:    "target"
+clean-targets:  ["target", "dbt_packages"]
+
+models:
+  minera_prueba:
+    bronce:
+      +materialized: view
+      +tags: ["capa:bronce", "dominio:minera_prueba"]
+    silver:
+      +materialized: incremental
+      +incremental_strategy: merge
+      +unique_key: pk_hash
+      +tags: ["capa:silver", "dominio:minera_prueba"]
+      detalles:
+        +unique_key: ["pk_hash", "valid_from"]
+        +incremental_strategy: append
+    oro:
+      +tags: ["capa:oro", "dominio:minera_prueba"]
+
+seeds:
+  minera_prueba:
+    +schema: semillas
+    +tags: ["dominio:minera_prueba"]
+
+snapshots:
+  minera_prueba:
+    +target_schema: instantaneos
+    +tags: ["capa:instantaneo", "dominio:minera_prueba"]

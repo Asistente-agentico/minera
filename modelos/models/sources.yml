@@ -1,0 +1,28 @@
+version: 2
+
+sources:
+  - name: landing
+    description: "Tablas de landing cargadas desde los CSV de mediciones ambientales."
+    tables:
+      - name: mediciones_prechancado
+        description: "Área Pre-Chancado"
+      - name: mediciones_chancado_2_3
+        description: "Área Chancado 2° y 3°"
+      - name: mediciones_terciario
+        description: "Área Chancado Fino 3°"
+      - name: mediciones_cuaternario
+        description: "Área Chancado Fino 4°"
+      - name: mediciones_molienda_sag
+        description: "Área Molienda SAG"
+      - name: mediciones_molienda_convencional
+        description: "Área Molienda Convencional"
+      - name: mediciones_cdm_1
+        description: "Área CDM — Línea 1"
+      - name: mediciones_cdm_2
+        description: "Área CDM — Línea 2"
+      - name: mediciones_nodo
+        description: "Área Nodo 3500"
+      - name: resumen_concentraciones
+        description: "Resumen ejecutivo — todas las áreas"
+      - name: datos_consolidados
+        description: "Tabla consolidada de todos los puntos de muestreo"

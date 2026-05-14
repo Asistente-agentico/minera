@@ -1,0 +1,41 @@
+# domain.yaml — Caso Minera (prueba)
+#
+# Dominio: seguridad ocupacional — concentración de polvo respirable.
+# Nota: los campos operador y tecnico contienen nombres de personas.
+# Para este caso de prueba se tratan como datos operacionales (no PII).
+# Evaluar tokenización en producción real.
+
+version: "1.0"
+metadata:
+  cliente_id: minera_prueba
+  descripcion: Mediciones ambientales de polvo respirable por área de planta minera
+
+hashing:
+  rules:
+    algoritmo: sha256_truncado_16
+    normalizacion: json_canonico
+
+dimensiones_de_gobernanza:
+  planta:
+    tipo: enum
+    valores:
+      - Pre-Chancado
+      - Chancado 2° y 3°
+      - Chancado Fino 3°
+      - Chancado Fino 4°
+      - Molienda SAG
+      - Molienda Convencional
+      - CDM
+      - Nodo 3500
+
+  ambito:
+    tipo: enum
+    valores:
+      - seguridad_ocupacional
+      - medioambiente
+
+  clasificacion:
+    tipo: enum
+    valores:
+      - interno
+      - restringido

@@ -1,0 +1,87 @@
+# rules/polvo_respirable.yaml — Caso Minera (prueba)
+#
+# Tres reglas para las preguntas del cliente sobre concentración de polvo
+# respirable. Usan la nueva estructura: sin query inline, con estado.
+# SQL en configuracion/sql/<id>.sql
+# Template en configuracion/templates/<id>.txt
+
+version: "1.2"
+metadata:
+  cliente_id: minera_prueba
+
+rules:
+
+  - id: P00001
+    estado: vigente
+    scope: polvo_respirable
+    criticality: high
+    description: "Puntos de medición que superaron 3 mg/m³ en la semana vigente."
+    temporal_policy: vigente
+    cardinalidad: multiple_per_entity
+    retencion_dias: 365
+    pipeline_tipo: business_rule_driven
+    id_synthesis:
+      columns: [planta, punto_evaluacion, semana]
+      separator: "_"
+    pii_estrategia: etiquetas
+    derecho_al_olvido: borrado_fisico
+    dimensiones:
+      planta: todas
+      ambito: seguridad_ocupacional
+      clasificacion: restringido
+    chunk_types: [fila_serializada]
+    smoke_test:
+      threshold: 0.80
+      recall_min: 0.70
+      expected_count_min: 1
+      expected_count_max: 50
+
+  - id: P00002
+    estado: vigente
+    scope: polvo_respirable
+    criticality: medium
+    description: "Resumen anual de concentración promedio y máxima por área de planta."
+    temporal_policy: append_only
+    cardinalidad: single_per_entity
+    retencion_dias: 730
+    pipeline_tipo: business_rule_driven
+    id_synthesis:
+      columns: [planta, anio]
+      separator: "_"
+    pii_estrategia: etiquetas
+    derecho_al_olvido: borrado_fisico
+    dimensiones:
+      planta: todas
+      ambito: seguridad_ocupacional
+      clasificacion: interno
+    chunk_types: [fila_serializada, resumen_regla]
+    smoke_test:
+      threshold: 0.80
+      recall_min: 0.70
+      expected_count_min: 1
+      expected_count_max: 20
+
+  - id: P00003
+    estado: vigente
+    scope: polvo_respirable
+    criticality: high
+    description: "Detalle completo (fecha, operador, técnico, horario) de la medición con mayor concentración histórica por área."
+    temporal_policy: vigente
+    cardinalidad: single_per_entity
+    retencion_dias: 730
+    pipeline_tipo: business_rule_driven
+    id_synthesis:
+      columns: [planta]
+      separator: "_"
+    pii_estrategia: etiquetas
+    derecho_al_olvido: borrado_fisico
+    dimensiones:
+      planta: todas
+      ambito: seguridad_ocupacional
+      clasificacion: restringido
+    chunk_types: [fila_serializada]
+    smoke_test:
+      threshold: 0.80
+      recall_min: 0.70
+      expected_count_min: 1
+      expected_count_max: 10

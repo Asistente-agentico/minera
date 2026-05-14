@@ -1,0 +1,177 @@
+# landing.yaml — Caso Minera (prueba)
+#
+# Fuente: planilla Excel "Puntos Criticos Semana 19- 2026.xlsx", exportada
+# a CSV por hoja. Estructura irregular: fila 1 = título, fila 2 = números
+# de semana como encabezados (1..52 + repetición año siguiente), filas
+# siguientes mezclan metadatos (fecha, operador, técnico, horario) con
+# valores de concentración por punto de medición.
+#
+# El modelo dbt bronce de cada fuente maneja el parseo de esta estructura.
+# schema_columnas declara solo la columna de etiqueta (primera columna);
+# las columnas de semana (72 en total) se procesan via SELECT * en bronce.
+#
+# Patrón de ingesta: overwrite + snapshot (Camino A).
+# DEUDA: no escala con el tiempo — ver analisis/preguntas.md.
+#
+# Ruta de datos en el contenedor: montar ./datos en /datos al correr docker.
+#   docker run -v ./datos:/datos -v ./configuracion:/app/configuracion ...
+
+version: "1.2"
+metadata:
+  cliente_id: minera_prueba
+  descripcion: Mediciones de concentración de polvo respirable por área de planta
+
+landing:
+  - nombre: mediciones_prechancado
+    lakehouse: duckdb
+    descripcion: Mediciones semanales de polvo respirable — área Pre-Chancado
+    formato: csv
+    ubicacion: /datos/csv/Prechancado.csv
+    schema_columnas:
+      - {nombre: etiqueta, tipo: string, nullable: true}
+    frecuencia: {tipo: batch, cron: "0 8 * * 1"}
+    ingestion_pattern: overwrite
+    frecuencia_actualizacion: semanal
+    enable_snapshots: true
+    snapshot_strategy: check_cols
+    snapshot_check_cols: [etiqueta]
+
+  - nombre: mediciones_chancado_2_3
+    lakehouse: duckdb
+    descripcion: Mediciones semanales de polvo respirable — área Chancado 2° y 3°
+    formato: csv
+    ubicacion: /datos/csv/2_y_3.csv
+    schema_columnas:
+      - {nombre: etiqueta, tipo: string, nullable: true}
+    frecuencia: {tipo: batch, cron: "0 8 * * 1"}
+    ingestion_pattern: overwrite
+    frecuencia_actualizacion: semanal
+    enable_snapshots: true
+    snapshot_strategy: check_cols
+    snapshot_check_cols: [etiqueta]
+
+  - nombre: mediciones_terciario
+    lakehouse: duckdb
+    descripcion: Mediciones semanales de polvo respirable — área Chancado Terciario
+    formato: csv
+    ubicacion: /datos/csv/Terciario.csv
+    schema_columnas:
+      - {nombre: etiqueta, tipo: string, nullable: true}
+    frecuencia: {tipo: batch, cron: "0 8 * * 1"}
+    ingestion_pattern: overwrite
+    frecuencia_actualizacion: semanal
+    enable_snapshots: true
+    snapshot_strategy: check_cols
+    snapshot_check_cols: [etiqueta]
+
+  - nombre: mediciones_cuaternario
+    lakehouse: duckdb
+    descripcion: Mediciones semanales de polvo respirable — área Chancado Cuaternario
+    formato: csv
+    ubicacion: /datos/csv/Cuaternario.csv
+    schema_columnas:
+      - {nombre: etiqueta, tipo: string, nullable: true}
+    frecuencia: {tipo: batch, cron: "0 8 * * 1"}
+    ingestion_pattern: overwrite
+    frecuencia_actualizacion: semanal
+    enable_snapshots: true
+    snapshot_strategy: check_cols
+    snapshot_check_cols: [etiqueta]
+
+  - nombre: mediciones_molienda_sag
+    lakehouse: duckdb
+    descripcion: Mediciones semanales de polvo respirable — área Molienda SAG
+    formato: csv
+    ubicacion: /datos/csv/Molienda_Sag.csv
+    schema_columnas:
+      - {nombre: etiqueta, tipo: string, nullable: true}
+    frecuencia: {tipo: batch, cron: "0 8 * * 1"}
+    ingestion_pattern: overwrite
+    frecuencia_actualizacion: semanal
+    enable_snapshots: true
+    snapshot_strategy: check_cols
+    snapshot_check_cols: [etiqueta]
+
+  - nombre: mediciones_molienda_convencional
+    lakehouse: duckdb
+    descripcion: Mediciones semanales de polvo respirable — área Molienda Convencional
+    formato: csv
+    ubicacion: /datos/csv/Molienda_Convencional.csv
+    schema_columnas:
+      - {nombre: etiqueta, tipo: string, nullable: true}
+    frecuencia: {tipo: batch, cron: "0 8 * * 1"}
+    ingestion_pattern: overwrite
+    frecuencia_actualizacion: semanal
+    enable_snapshots: true
+    snapshot_strategy: check_cols
+    snapshot_check_cols: [etiqueta]
+
+  - nombre: mediciones_cdm_1
+    lakehouse: duckdb
+    descripcion: Mediciones semanales de polvo respirable — área CDM (sector 1)
+    formato: csv
+    ubicacion: /datos/csv/CDM_(1).csv
+    schema_columnas:
+      - {nombre: etiqueta, tipo: string, nullable: true}
+    frecuencia: {tipo: batch, cron: "0 8 * * 1"}
+    ingestion_pattern: overwrite
+    frecuencia_actualizacion: semanal
+    enable_snapshots: true
+    snapshot_strategy: check_cols
+    snapshot_check_cols: [etiqueta]
+
+  - nombre: mediciones_cdm_2
+    lakehouse: duckdb
+    descripcion: Mediciones semanales de polvo respirable — área CDM (sector 2)
+    formato: csv
+    ubicacion: /datos/csv/CDM_(2).csv
+    schema_columnas:
+      - {nombre: etiqueta, tipo: string, nullable: true}
+    frecuencia: {tipo: batch, cron: "0 8 * * 1"}
+    ingestion_pattern: overwrite
+    frecuencia_actualizacion: semanal
+    enable_snapshots: true
+    snapshot_strategy: check_cols
+    snapshot_check_cols: [etiqueta]
+
+  - nombre: mediciones_nodo
+    lakehouse: duckdb
+    descripcion: Mediciones semanales de polvo respirable — área Nodo 3500
+    formato: csv
+    ubicacion: /datos/csv/Nodo.csv
+    schema_columnas:
+      - {nombre: etiqueta, tipo: string, nullable: true}
+    frecuencia: {tipo: batch, cron: "0 8 * * 1"}
+    ingestion_pattern: overwrite
+    frecuencia_actualizacion: semanal
+    enable_snapshots: true
+    snapshot_strategy: check_cols
+    snapshot_check_cols: [etiqueta]
+
+  - nombre: resumen_concentraciones
+    lakehouse: duckdb
+    descripcion: Resumen ejecutivo de concentraciones por área y punto — todas las semanas
+    formato: csv
+    ubicacion: /datos/csv/Resumen.csv
+    schema_columnas:
+      - {nombre: etiqueta, tipo: string, nullable: true}
+    frecuencia: {tipo: batch, cron: "0 8 * * 1"}
+    ingestion_pattern: overwrite
+    frecuencia_actualizacion: semanal
+    enable_snapshots: true
+    snapshot_strategy: check_cols
+    snapshot_check_cols: [etiqueta]
+
+  - nombre: datos_consolidados
+    lakehouse: duckdb
+    descripcion: Tabla consolidada de todos los puntos de muestreo con concentraciones por semana
+    formato: csv
+    ubicacion: /datos/csv/Datos.csv
+    schema_columnas:
+      - {nombre: etiqueta, tipo: string, nullable: true}
+    frecuencia: {tipo: batch, cron: "0 8 * * 1"}
+    ingestion_pattern: overwrite
+    frecuencia_actualizacion: semanal
+    enable_snapshots: true
+    snapshot_strategy: check_cols
+    snapshot_check_cols: [etiqueta]
