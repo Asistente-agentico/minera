@@ -20,6 +20,7 @@ Salida: PASS / FAIL por check. Exit code 0 si todo pasa, 1 si alguno falla.
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import sys
 from pathlib import Path
@@ -34,7 +35,13 @@ DOMAIN_PATH = MINERA_ROOT / "configuracion" / "domain.yaml"
 DEFAULT_CHUNKS = str(MINERA_ROOT / "datos" / "chunks_generados.json")
 
 sys.path.insert(0, str(DISENO_ROOT))
-from core.security.crypto import calcular_hash_md5, calcular_integrity_tag  # noqa: E402
+from core.security.crypto import (  # noqa: E402
+    calcular_hash_md5,
+    calcular_integrity_tag,
+    derivar_kek,
+    descifrar_con_clave,
+    descifrar_dek_con_kek,
+)
 
 MASTER_SECRET_TEST: bytes = b"minera_test_MASTER_SECRET_32by!!"
 
@@ -65,6 +72,20 @@ def _fail(msg: str) -> None:
     print(f"  [FAIL] {msg}")
 
 
+def _campo(ch: dict, grupo: str, campo: str):
+    """Lee un campo del chunk agrupado (dev) o plano (prod)."""
+    if grupo in ch:
+        return ch[grupo].get(campo)
+    return ch.get(campo)
+
+
+def _cifrado_bloque(ch: dict) -> dict:
+    """Devuelve el bloque cifrado sea agrupado o plano."""
+    if "cifrado" in ch:
+        return ch["cifrado"]
+    return {k: ch.get(k) for k in ("ciphertext", "datos_negocio", "dek_cifrada", "kek_version")}
+
+
 def ejecutar(chunks_path: str) -> bool:
     chunks: list[dict] = json.loads(Path(chunks_path).read_text(encoding="utf-8"))
     smoke_cfg = _cargar_smoke_config()
@@ -74,7 +95,7 @@ def ejecutar(chunks_path: str) -> bool:
     # Agrupar por regla
     por_regla: dict[str, list[dict]] = {}
     for ch in chunks:
-        rid = ch["payload"]["regla_id"]
+        rid = _campo(ch, "id", "regla_id")
         por_regla.setdefault(rid, []).append(ch)
 
     total_checks = 0
@@ -112,13 +133,12 @@ def ejecutar(chunks_path: str) -> bool:
         # 2. Integrity tags
         fallos_hmac = 0
         for ch in chs:
-            p = ch["payload"]
             texto = ch.get("texto_dev")
             if texto is None:
                 continue  # sin texto plano (archivo prod): skip por chunk
             h = calcular_hash_md5(texto)
             tag = calcular_integrity_tag(ch["chunk_id"], h, texto, MASTER_SECRET_TEST)
-            if h != p["hash_contenido"] or tag != p["firma_hmac"]:
+            if h != _campo(ch, "integridad", "hash_contenido") or tag != _campo(ch, "integridad", "firma_hmac"):
                 fallos_hmac += 1
         total_checks += 1
         tiene_texto = any(ch.get("texto_dev") for ch in chs)
@@ -133,7 +153,7 @@ def ejecutar(chunks_path: str) -> bool:
         # 3. Dimensiones
         fallos_dim = 0
         for ch in chs:
-            dims = set(ch["payload"].get("dimensiones", {}).keys())
+            dims = set((_campo(ch, "gobernanza", "dimensiones") or {}).keys())
             if not dims_requeridas.issubset(dims):
                 fallos_dim += 1
         total_checks += 1
@@ -143,11 +163,23 @@ def ejecutar(chunks_path: str) -> bool:
             _fail(f"{fallos_dim} chunks sin dimensiones requeridas")
             total_fallos += 1
 
-        # 4. Campos requeridos en datos_negocio
+        # 4. Campos requeridos en datos_negocio (descifra con MASTER_SECRET_TEST)
         fallos_campos = 0
         campos_nulos: list[str] = []
         for ch in chs:
-            pl = ch["payload"].get("cifrado", {}).get("datos_negocio", {})
+            bloque = _cifrado_bloque(ch)
+            dn_raw = bloque.get("datos_negocio")
+            dk_raw = bloque.get("dek_cifrada")
+            kv = bloque.get("kek_version")
+            if isinstance(dn_raw, str) and dk_raw and kv:
+                try:
+                    kek = derivar_kek(MASTER_SECRET_TEST, kv)
+                    dek = descifrar_dek_con_kek(base64.b64decode(dk_raw), kek)
+                    pl = json.loads(descifrar_con_clave(dek, base64.b64decode(dn_raw)).decode("utf-8"))
+                except Exception:
+                    pl = {}
+            else:
+                pl = dn_raw if isinstance(dn_raw, dict) else {}
             for campo in campos_req:
                 if pl.get(campo) is None:
                     fallos_campos += 1

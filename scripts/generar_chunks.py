@@ -16,6 +16,7 @@ Uso:
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import sys
@@ -40,11 +41,20 @@ OUT_DEV_PATH = str(MINERA_ROOT / "datos" / "chunks_generados_dev.json")
 
 # Importa utilidades crypto del producto diseno
 sys.path.insert(0, str(DISENO_ROOT))
-from core.security.crypto import calcular_hash_md5, calcular_integrity_tag  # noqa: E402
+from core.security.crypto import (  # noqa: E402
+    calcular_hash_md5,
+    calcular_integrity_tag,
+    cifrar_con_clave,
+    cifrar_dek_con_kek,
+    cifrar_texto_con_dek,
+    derivar_kek,
+    generar_dek,
+)
 
 # MASTER_SECRET de prueba — en producción se carga desde el Secret Manager
 # del cliente vía la variable de entorno MASTER_SECRET.
 MASTER_SECRET_TEST: bytes = b"minera_test_MASTER_SECRET_32by!!"
+KEK_VERSION = "v1"
 
 
 def _cargar_rules() -> dict[str, dict]:
@@ -112,6 +122,7 @@ def _procesar_regla(
     corrida_id: str,
     valido_desde: str,
     transform_hash: str,
+    kek: bytes,
 ) -> list[dict]:
     id_synthesis = regla_cfg["id_synthesis"]
     dims_declaradas = regla_cfg.get("dimensiones", {})
@@ -141,35 +152,59 @@ def _procesar_regla(
         campos_pii = regla_cfg.get("pii_tokens", [])
         pii_tokens = {campo: d[campo] for campo in campos_pii if campo in d}
 
+        dek = generar_dek()
+        ciphertext_b64 = base64.b64encode(cifrar_texto_con_dek(texto, dek)).decode("ascii")
+        datos_negocio_b64 = base64.b64encode(
+            cifrar_con_clave(dek, json.dumps(datos_negocio, ensure_ascii=False, default=str).encode("utf-8"))
+        ).decode("ascii")
+        dek_cifrada_b64 = base64.b64encode(cifrar_dek_con_kek(dek, kek)).decode("ascii")
+
         chunks.append({
             "chunk_id": chunk_id,
             "texto_dev": texto,  # solo para chunks_generados_dev.json
-            "vector": [],        # embedding pendiente — stub para caso de prueba
-            "payload": {
-                "transform_hash": transform_hash,
-                "corrida_id": corrida_id,
+            "id": {
+                "chunk_id": chunk_id,
                 "regla_id": regla_id,
+                "fecha_creacion": valido_desde,
+            },
+            "vigencia": {
+                "valido_hasta": -1,
+                "politica_vigencia": regla_cfg.get("politica_vigencia", "preservar"),
+            },
+            "gobernanza": {
                 "dimensiones": dimensiones,
                 "dimensiones_en_texto": regla_cfg.get("dimensiones_en_texto", []),
-                "tipo_olvido_chunk": regla_cfg["tipo_olvido_chunk"],
-                "alias_recuperacion": regla_cfg["alias_recuperacion"],
                 "pii_estrategia": regla_cfg.get("pii_estrategia", "tokens"),
                 "pii_tokens": pii_tokens,
-                "derecho_al_olvido": regla_cfg.get("derecho_al_olvido", "borrado_fisico"),
-                "valido_desde": valido_desde,
-                "valido_hasta": -1,
+                "estrategia_olvido": regla_cfg.get("estrategia_olvido", "borrar_chunk"),
+            },
+            "integridad": {
                 "hash_contenido": hash_contenido,
                 "firma_hmac": firma_hmac,
-                "cifrado": {
-                    "ciphertext": None,
-                    "datos_negocio": datos_negocio,
-                    "dek_cifrada": None,
-                    "kek_version": None,
-                },
+            },
+            "trazabilidad": {
+                "corrida_id": corrida_id,
+                "transform_hash": transform_hash,
+            },
+            "cifrado": {
+                "ciphertext": ciphertext_b64,
+                "datos_negocio": datos_negocio_b64,
+                "dek_cifrada": dek_cifrada_b64,
+                "kek_version": KEK_VERSION,
             },
         })
 
     return chunks
+
+
+def _aplanar_chunk(ch: dict) -> dict:
+    """Produce la versión plana del chunk para el archivo de producción."""
+    plano = {"chunk_id": ch["chunk_id"]}
+    for grupo in ("id", "vigencia", "gobernanza", "integridad", "trazabilidad", "cifrado"):
+        for k, v in ch.get(grupo, {}).items():
+            if k != "chunk_id":
+                plano[k] = v
+    return plano
 
 
 def main() -> None:
@@ -183,6 +218,7 @@ def main() -> None:
     valido_desde = date.today().isoformat()
     transform_hash = _cargar_transform_hash()
     rules = _cargar_rules()
+    kek = derivar_kek(MASTER_SECRET_TEST, KEK_VERSION)
 
     print(f"Conectando a DuckDB: {DB_PATH}")
     con = duckdb.connect(DB_PATH, read_only=True)
@@ -190,7 +226,7 @@ def main() -> None:
     todos_los_chunks: list[dict] = []
     for regla_id, regla_cfg in rules.items():
         chunks = _procesar_regla(
-            con, regla_id, regla_cfg, corrida_id, valido_desde, transform_hash
+            con, regla_id, regla_cfg, corrida_id, valido_desde, transform_hash, kek
         )
         print(f"  [{regla_id}] {len(chunks)} chunks generados")
         todos_los_chunks.extend(chunks)
@@ -205,16 +241,17 @@ def main() -> None:
             print(ch["texto_dev"])
         return
 
-    # Archivo de producción: sin texto en plano
-    chunks_prod = [{k: v for k, v in ch.items() if k != "texto_dev"}
-                   for ch in todos_los_chunks]
+    # Archivo de producción: plano (sin grupos, sin texto_dev)
+    chunks_prod = [_aplanar_chunk(ch) for ch in todos_los_chunks]
     with open(OUT_PATH, "w", encoding="utf-8") as f:
         json.dump(chunks_prod, f, ensure_ascii=False, indent=2)
     print(f"Guardado en: {OUT_PATH}")
 
     if args.dev:
+        # Archivo dev: agrupado con texto_dev para debugging y smoke test
+        chunks_dev = [{k: v for k, v in ch.items()} for ch in todos_los_chunks]
         with open(OUT_DEV_PATH, "w", encoding="utf-8") as f:
-            json.dump(todos_los_chunks, f, ensure_ascii=False, indent=2)
+            json.dump(chunks_dev, f, ensure_ascii=False, indent=2)
         print(f"Dev guardado en: {OUT_DEV_PATH}")
 
 

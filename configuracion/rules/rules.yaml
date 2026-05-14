@@ -1,11 +1,8 @@
 # rules/polvo_respirable.yaml — Caso Minera (prueba)
 #
-# Tres reglas para las preguntas del cliente sobre concentración de polvo
-# respirable. Usan la nueva estructura: sin query inline, con estado.
-# SQL en configuracion/sql/<id>.sql
-# Template en configuracion/templates/<id>.txt
 
-version: "1.2"
+
+version: "1.3"
 metadata:
   cliente_id: minera_prueba
 
@@ -13,75 +10,141 @@ rules:
 
   - id: P00001
     estado: vigente
-    scope: polvo_respirable
-    criticality: high
-    description: "Puntos de medición que superaron 3 mg/m³ en la semana vigente."
-    temporal_policy: vigente
+    descripcion: "Puntos de medición que superaron el límite interno (2,5 mg/m³) en la semana vigente, con semáforo de concentración."
+    politica_temporal: vigente
     cardinalidad: multiple_per_entity
-    retencion_dias: 365
-    pipeline_tipo: business_rule_driven
+    pipeline_tipo: basado_en_reglas
     id_synthesis:
       columns: [planta, punto_evaluacion, semana]
       separator: "_"
-    pii_estrategia: etiquetas
-    derecho_al_olvido: borrado_fisico
+    pii_estrategia: tokens
+    pii_tokens: [operador, tecnico]
+    estrategia_olvido: borrar_chunk
     dimensiones:
       planta: todas
       ambito: seguridad_ocupacional
       clasificacion: restringido
-    chunk_types: [fila_serializada]
+    dimensiones_en_texto: []
+    politica_vigencia: preservar
+    alias_recuperacion: marcar_y_seguir
     smoke_test:
       threshold: 0.80
       recall_min: 0.70
       expected_count_min: 1
       expected_count_max: 50
+      campos_requeridos:
+        - planta
+        - punto_evaluacion
+        - anio
+        - semana
+        - concentracion_mg_m3
+        - hora_inicio
+        - hora_termino
+        - nivel_semaforo
+        - etiqueta_semaforo
 
   - id: P00002
     estado: vigente
-    scope: polvo_respirable
-    criticality: medium
-    description: "Resumen anual de concentración promedio y máxima por área de planta."
-    temporal_policy: append_only
+    descripcion: "Resumen anual de polvo respirable por planta: concentración promedio, máxima y mínima, y registros que superaron el límite interno."
+    politica_temporal: append_only
     cardinalidad: single_per_entity
-    retencion_dias: 730
-    pipeline_tipo: business_rule_driven
+    pipeline_tipo: basado_en_reglas
     id_synthesis:
       columns: [planta, anio]
       separator: "_"
-    pii_estrategia: etiquetas
-    derecho_al_olvido: borrado_fisico
+    pii_estrategia: tokens
+    pii_tokens: []
+    estrategia_olvido: borrar_chunk
     dimensiones:
       planta: todas
       ambito: seguridad_ocupacional
       clasificacion: interno
-    chunk_types: [fila_serializada, resumen_regla]
+    dimensiones_en_texto: []
+    politica_vigencia: preservar
+    alias_recuperacion: marcar_y_seguir
     smoke_test:
       threshold: 0.80
       recall_min: 0.70
       expected_count_min: 1
       expected_count_max: 20
+      campos_requeridos:
+        - planta
+        - anio
+        - semanas_medidas
+        - puntos_medidos
+        - concentracion_promedio_mg_m3
+        - concentracion_max_mg_m3
+        - registros_sobre_limite
+        - limite_interno_mg_m3
 
   - id: P00003
     estado: vigente
-    scope: polvo_respirable
-    criticality: high
-    description: "Detalle completo (fecha, operador, técnico, horario) de la medición con mayor concentración histórica por área."
-    temporal_policy: vigente
+    descripcion: "Detalle completo (fecha, operador, técnico, horario) de la medición con mayor concentración histórica por área."
+    politica_temporal: vigente
     cardinalidad: single_per_entity
-    retencion_dias: 730
-    pipeline_tipo: business_rule_driven
+    pipeline_tipo: basado_en_reglas
     id_synthesis:
       columns: [planta]
       separator: "_"
-    pii_estrategia: etiquetas
-    derecho_al_olvido: borrado_fisico
+    pii_estrategia: tokens
+    pii_tokens: [operador, operador_dni, tecnico, tecnico_dni]
+    estrategia_olvido: borrar_chunk
     dimensiones:
       planta: todas
       ambito: seguridad_ocupacional
       clasificacion: restringido
-    chunk_types: [fila_serializada]
+    dimensiones_en_texto: []
+    politica_vigencia: preservar
+    alias_recuperacion: marcar_y_seguir
     smoke_test:
       threshold: 0.80
       recall_min: 0.70
       expected_count_min: 1
       expected_count_max: 10
+      campos_requeridos:
+        - planta
+        - punto_evaluacion
+        - anio
+        - semana
+        - concentracion_mg_m3
+        - fecha
+        - hora_inicio
+        - hora_termino
+        - nivel_semaforo
+        - etiqueta_semaforo
+
+  - id: P00004
+    estado: vigente
+    descripcion: "Todas las mediciones de la última jornada de medición global (con y sin exceso del límite)."
+    politica_temporal: vigente
+    cardinalidad: multiple_per_entity
+    pipeline_tipo: basado_en_reglas
+    id_synthesis:
+      columns: [planta, punto_evaluacion]
+      separator: "_"
+    pii_estrategia: tokens
+    pii_tokens: [operador, tecnico]
+    estrategia_olvido: borrar_chunk
+    dimensiones:
+      planta: todas
+      ambito: seguridad_ocupacional
+      clasificacion: interno
+    dimensiones_en_texto: []
+    politica_vigencia: preservar
+    alias_recuperacion: marcar_y_seguir
+    smoke_test:
+      threshold: 0.80
+      recall_min: 0.70
+      expected_count_min: 1
+      expected_count_max: 50
+      campos_requeridos:
+        - planta
+        - punto_evaluacion
+        - anio
+        - semana
+        - concentracion_mg_m3
+        - hora_inicio
+        - hora_termino
+        - estado_limite
+        - nivel_semaforo
+        - etiqueta_semaforo
