@@ -1,4 +1,4 @@
-# domain.yaml — Caso Minera (prueba)
+# dominio.yaml — Caso Minera (prueba)
 #
 # Dominio: seguridad ocupacional — concentración de polvo respirable.
 # Nota: los campos operador y tecnico contienen nombres de personas.
@@ -10,8 +10,44 @@ metadata:
   cliente_id: minera_prueba
   descripcion: Mediciones ambientales de polvo respirable por área de planta minera
 
+proyecto_transformacion: modelos
+
 chunks:
   valido_hasta_default: -1   # -1 = sin expiración (sentinel)
+  contrato:
+    # campos presentes en ambos contextos (prod y dev)
+    regla_id:             {grupo_dev: id}
+    fecha_creacion:       {grupo_dev: id}
+    corrida_id:           {grupo_dev: trazabilidad}
+    medallon_id:          {grupo_dev: trazabilidad}
+    valido_hasta:         {grupo_dev: vigencia, default: -1}
+    politica_vigencia:    {grupo_dev: vigencia}
+    dimensiones:          {grupo_dev: gobernanza}
+    dimensiones_en_texto: {grupo_dev: gobernanza}
+    pii_estrategia:       {grupo_dev: gobernanza}
+    pii_tokens:           {grupo_dev: gobernanza}
+    estrategia_olvido:    {grupo_dev: gobernanza}
+    hash_contenido:       {grupo_dev: integridad}
+    firma_hmac:           {grupo_dev: integridad}
+    texto:                {grupo_dev: cifrado, cifrado_en_prod: true}
+    datos_negocio:        {grupo_dev: cifrado, cifrado_en_prod: true}
+    # solo produccion
+    chunk_id:             {solo: prod}
+    regla_version:        {solo: prod}
+    dek_cifrada:          {solo: prod}
+    kek_version:          {solo: prod}
+    # solo inspeccion dev
+    chunk_clave:          {solo: dev, grupo_dev: id}
+    firma_hmac_entrada:   {solo: dev, grupo_dev: integridad}
+
+embeddings:
+  proveedor: local
+  modelo_id: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+  dimensiones: 384
+  batch_size: 64
+  vector_store:
+    url: ./qdrant_data
+    collection: chunks
 
 hashing:
   rules:
@@ -46,26 +82,3 @@ dimensiones_de_gobernanza:
 smoke_test_contract:
   campos_requeridos_obligatorio: true
 
-chunk_contract:
-  campos_planos:
-    - chunk_id
-    - regla_id
-    - fecha_creacion
-    - corrida_id
-    - transform_hash
-    - dimensiones
-    - dimensiones_en_texto
-    - valido_hasta
-    - politica_vigencia
-    - pii_estrategia
-    - pii_tokens
-    - estrategia_olvido
-    - hash_contenido
-    - firma_hmac
-  campos_cifrados:
-    bloque: cifrado
-    campos:
-      - texto
-      - datos_negocio
-      - dek_cifrada
-      - kek_version
