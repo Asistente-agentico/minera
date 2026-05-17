@@ -1,0 +1,160 @@
+# Suite E2E — caso Minera
+# Dominio: seguridad ocupacional — concentración de polvo respirable (DS 594).
+#
+# Ejecutar desde el repo Illari:
+#   export ILLARI_E2E_SUITE=/ruta/a/minera/tests/e2e.yaml
+#   export ILLARI_E2E_DOMINIO=/ruta/a/minera/configuracion/dominio.yaml
+#   export MASTER_SECRET=<mismo secreto usado en chunker --embed>
+#   pytest tests/e2e/ -v -m e2e
+#
+# Prerequisito: dbt run + chunker --embed ejecutados contra datos reales
+# del cliente (ver minera/README.md §Desarrollo).
+#
+# Campo 'texto': consulta del usuario (campo del API POST /consultas).
+# Campo 'contiene_texto': lista de términos que deben aparecer en al menos
+#   un chunk devuelto. Los valores se derivan de los seeds y plantillas del
+#   cliente (semaforo_polvo_respirable.csv, plantillas/P000XX_M000XX.txt).
+
+suite: minera
+descripcion: "Polvo respirable DS 594 — 4 preguntas de negocio, 4 perfiles"
+
+perfiles:
+  - id: jefe_seguridad
+    descripcion: "Jefe de seguridad con acceso a datos restringidos"
+    claims_dominio:
+      planta: "Molienda SAG"
+      ambito: seguridad_ocupacional
+      clasificacion: restringido
+
+  - id: operador_chancado
+    descripcion: "Operador de Pre-Chancado con acceso interno"
+    claims_dominio:
+      planta: "Pre-Chancado"
+      ambito: seguridad_ocupacional
+      clasificacion: interno
+
+  - id: auditor_ambiental
+    descripcion: "Auditor de seguridad ocupacional, todas las plantas"
+    claims_dominio:
+      ambito: seguridad_ocupacional
+      clasificacion: restringido
+
+  - id: tecnico_medioambiente
+    descripcion: "Técnico de medioambiente"
+    claims_dominio:
+      ambito: medioambiente
+      clasificacion: interno
+
+escenarios:
+
+  # ── P1 — Puntos sobre el límite esta semana ──────────────────────────────
+  # M00001: devuelve una fila por punto que supera 2.5 mg/m³ en la semana vigente.
+  # Plantilla: "... concentración de polvo respirable {concentracion_mg_m3} mg/m³,
+  #   semáforo {etiqueta_semaforo} ({veces_sobre_limite}x el límite interno de
+  #   {limite_interno_mg_m3} mg/m³) ..."
+  # seed semaforo: etiqueta "peligroso" para nivel 4 (2.5–5.0 mg/m³)
+  - id: P1_sobre_limite_auditor
+    perfil: auditor_ambiental
+    texto: "¿Qué puntos superaron el límite permitido esta semana?"
+    espera:
+      status: 200
+      min_chunks: 1
+      contiene_texto:
+        - "mg/m³"
+        - "2.5"           # limite_interno_mg_m3 del seed semaforo_polvo_respirable
+        - "peligroso"     # etiqueta_semaforo para nivel 4 (>2.5 mg/m³)
+
+  - id: P1_sobre_limite_jefe
+    perfil: jefe_seguridad
+    texto: "¿Qué puntos superaron el límite permitido esta semana?"
+    espera:
+      status: 200
+      min_chunks: 1
+      contiene_texto:
+        - "mg/m³"
+        - "2.5"
+
+  # ── P2 — Resumen anual por área ──────────────────────────────────────────
+  # M00002: una fila por planta con concentracion_promedio, max, min y pct sobre límite.
+  # Plantilla: "... {semanas_medidas} {semanas_label} en {puntos_medidos} {puntos_label}
+  #   de control. Concentración promedio {concentracion_promedio_mg_m3} mg/m³, ..."
+  - id: P2_resumen_anual
+    perfil: auditor_ambiental
+    texto: "¿Qué área tiene el peor historial del año?"
+    espera:
+      status: 200
+      min_chunks: 1
+      contiene_texto:
+        - "mg/m³"
+        - "2.5"           # limite_interno_mg_m3
+        - "semanas medidas"    # parte literal de la plantilla P00002_M00002.txt
+
+  # ── P3 — Condiciones del peak histórico ─────────────────────────────────
+  # M00003: detalle de la medición con mayor concentración histórica por planta.
+  # Plantilla: "Concentración histórica máxima en planta {planta}: {concentracion_mg_m3}
+  #   mg/m³ en punto ..."
+  # pii_tokens: [operador, operador_dni, tecnico, tecnico_dni] → aparecen tokenizados
+  - id: P3_peak_historico
+    perfil: auditor_ambiental
+    texto: "¿Qué estaba pasando cuando se midió la concentración más alta?"
+    espera:
+      status: 200
+      min_chunks: 1
+      contiene_texto:
+        - "mg/m³"
+        - "límite interno"   # parte literal de la plantilla P00003_M00003.txt
+
+  # ── P4 — Última jornada ─────────────────────────────────────────────────
+  # M00004: todas las mediciones de la sesión más reciente a nivel global.
+  # Plantilla: "... última jornada (semana {semana} de {anio}): concentración
+  #   {concentracion_mg_m3} mg/m³, semáforo {etiqueta_semaforo} ..."
+  - id: P4_ultima_jornada_operador
+    perfil: operador_chancado
+    texto: "¿Cómo fue la última jornada de medición?"
+    espera:
+      status: 200
+      min_chunks: 1
+      contiene_texto:
+        - "mg/m³"
+        - "última jornada"   # parte literal de la plantilla P00004_M00004.txt
+
+  - id: P4_ultima_jornada_auditor
+    perfil: auditor_ambiental
+    texto: "¿Cómo fue la última jornada de medición?"
+    espera:
+      status: 200
+      min_chunks: 1
+      contiene_texto:
+        - "mg/m³"
+        - "última jornada"
+
+  # ── Validación de autenticación ──────────────────────────────────────────
+  - id: sin_jwt
+    # perfil ausente = sin token Authorization
+    texto: "¿Cómo fue la última jornada?"
+    espera:
+      status: 401
+
+  - id: jwt_invalido
+    token_literal: "esto_no_es_un_jwt"
+    texto: "¿Cómo fue la última jornada?"
+    espera:
+      status: 401
+
+  # ── Validación de payload ────────────────────────────────────────────────
+  # POST /consultas retorna 400 (consulta_invalida) para texto vacío,
+  # no 422 — es validación manual del router (RT 17.7).
+  - id: texto_vacio
+    perfil: jefe_seguridad
+    texto: ""
+    espera:
+      status: 400
+
+  # ── Sin match semántico ──────────────────────────────────────────────────
+  # Una consulta sin relación con el dominio debería devolver 0 chunks.
+  - id: sin_match_semantico
+    perfil: auditor_ambiental
+    texto: "xkzqwpmnvbrt asdflkjh"
+    espera:
+      status: 200
+      max_chunks: 0
