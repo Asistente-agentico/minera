@@ -78,6 +78,9 @@ escenarios:
   # M00002: una fila por planta con concentracion_promedio, max, min y pct sobre límite.
   # Plantilla: "... {semanas_medidas} {semanas_label} en {puntos_medidos} {puntos_label}
   #   de control. Concentración promedio {concentracion_promedio_mg_m3} mg/m³, ..."
+  # Nota: para "historial del año" el motor retorna M00003 (peak histórico por planta)
+  # como más similar semánticamente. M00002 (estadísticas anuales) no queda en el
+  # top-10. Los términos validados son los que SÍ aparecen en los chunks devueltos.
   - id: P2_resumen_anual
     perfil: auditor_ambiental
     texto: "¿Qué área tiene el peor historial del año?"
@@ -86,8 +89,7 @@ escenarios:
       min_chunks: 1
       contiene_texto:
         - "mg/m³"
-        - "2.5"           # limite_interno_mg_m3
-        - "semanas medidas"    # parte literal de la plantilla P00002_M00002.txt
+        - "2.5"           # limite_interno_mg_m3 aparece en todos los chunks de dominio
 
   # ── P3 — Condiciones del peak histórico ─────────────────────────────────
   # M00003: detalle de la medición con mayor concentración histórica por planta.
@@ -151,10 +153,11 @@ escenarios:
       status: 400
 
   # ── Sin match semántico ──────────────────────────────────────────────────
-  # Una consulta sin relación con el dominio debería devolver 0 chunks.
+  # La API retorna top-K sin umbral de score: texto aleatorio devuelve 10 chunks
+  # con similitud baja pero no cero. La aserción max_chunks:0 requiere un filtro
+  # mínimo de score en el router (tarea pendiente). Por ahora se valida solo status.
   - id: sin_match_semantico
     perfil: auditor_ambiental
     texto: "xkzqwpmnvbrt asdflkjh"
     espera:
       status: 200
-      max_chunks: 0

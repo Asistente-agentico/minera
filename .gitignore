@@ -1,6 +1,9 @@
 # Datos del cliente — PII y archivos grandes
 datos/
 
+# Vector store local (generado por chunker --embed)
+qdrant_data/
+
 # Seeds con datos personales (PII)
 modelos/seeds/personas_alias.csv
 
