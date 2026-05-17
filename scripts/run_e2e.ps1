@@ -107,6 +107,8 @@ Write-Host ""
 # -- Ejecutar ----------------------------------------------------------------
 $cmd = "pip install fastembed -q 2>/dev/null && python -m pytest /app/tests/e2e/ $pytestFlags"
 
+# Tee-Object en PowerShell 5.1 no admite -Encoding; se fuerza UTF-8 con ForEach-Object
+New-Item -ItemType File -Force -Path $outFile | Out-Null
 docker run --rm `
     -v "${repoRaiz}:/cliente/minera" `
     @devMount `
@@ -118,7 +120,7 @@ docker run --rm `
     --entrypoint sh `
     $Imagen `
     -c $cmd `
-    | Tee-Object -FilePath $outFile
+    | ForEach-Object { $_; $_ | Out-File -FilePath $outFile -Encoding UTF8 -Append }
 
 $exitCode = $LASTEXITCODE
 
