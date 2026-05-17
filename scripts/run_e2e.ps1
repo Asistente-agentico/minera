@@ -33,7 +33,7 @@
 param(
     [string]$Suite        = "tests/e2e.yaml",
     [string]$MasterSecret = $env:MASTER_SECRET,
-    [string]$Imagen       = "ghcr.io/asistente-agentico/illari:dev-0.6.2",
+    [string]$Imagen       = "ghcr.io/asistente-agentico/illari:dev-0.6.3",
     [switch]$Dev
 )
 
