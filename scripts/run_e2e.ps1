@@ -42,6 +42,18 @@ $ErrorActionPreference = "Stop"
 
 # -- Rutas ------------------------------------------------------------------
 $repoRaiz = Split-Path -Parent $PSScriptRoot
+
+# -- Leer .env si MASTER_SECRET no viene como parametro ni env var ----------
+if (-not $MasterSecret) {
+    $envFile = Join-Path $repoRaiz ".env"
+    if (Test-Path $envFile) {
+        Get-Content $envFile | ForEach-Object {
+            if ($_ -match "^\s*MASTER_SECRET\s*=\s*(.+)$") {
+                $MasterSecret = $Matches[1].Trim()
+            }
+        }
+    }
+}
 $suiteAbs = Join-Path $repoRaiz $Suite
 
 if (-not (Test-Path $suiteAbs)) {
