@@ -24,28 +24,46 @@ perfiles:
   - id: jefe_seguridad
     descripcion: "Jefe de seguridad con acceso a datos restringidos"
     claims_dominio:
-      planta: "Molienda SAG"
-      ambito: seguridad_ocupacional
-      clasificacion: restringido
+      planta: ["Molienda SAG"]
+      ambito: ["seguridad_ocupacional"]
+      clasificacion: ["restringido"]
 
   - id: operador_chancado
     descripcion: "Operador de Pre-Chancado con acceso interno"
     claims_dominio:
-      planta: "Pre-Chancado"
-      ambito: seguridad_ocupacional
-      clasificacion: interno
+      planta: ["Pre-Chancado"]
+      ambito: ["seguridad_ocupacional"]
+      clasificacion: ["interno"]
 
   - id: auditor_ambiental
-    descripcion: "Auditor de seguridad ocupacional, todas las plantas"
+    descripcion: "Auditor de seguridad ocupacional, acceso a todas las plantas"
     claims_dominio:
-      ambito: seguridad_ocupacional
-      clasificacion: restringido
+      planta:
+        - Pre-Chancado
+        - "Chancado 2° y 3°"
+        - "Chancado Fino 3°"
+        - "Chancado Fino 4°"
+        - "Molienda SAG"
+        - "Molienda Convencional"
+        - CDM
+        - "Nodo 3500"
+      ambito: ["seguridad_ocupacional"]
+      clasificacion: ["restringido"]
 
   - id: tecnico_medioambiente
-    descripcion: "Técnico de medioambiente"
+    descripcion: "Técnico de medioambiente, acceso a todas las plantas"
     claims_dominio:
-      ambito: medioambiente
-      clasificacion: interno
+      planta:
+        - Pre-Chancado
+        - "Chancado 2° y 3°"
+        - "Chancado Fino 3°"
+        - "Chancado Fino 4°"
+        - "Molienda SAG"
+        - "Molienda Convencional"
+        - CDM
+        - "Nodo 3500"
+      ambito: ["medioambiente"]
+      clasificacion: ["interno"]
 
 escenarios:
 
@@ -153,6 +171,17 @@ escenarios:
     texto: ""
     espera:
       status: 400
+
+  # ── Gobernanza: ambito incorrecto ───────────────────────────────────────
+  # tecnico_medioambiente tiene ambito=["medioambiente"]. Todos los chunks del
+  # dominio minera son ambito="seguridad_ocupacional". El governance_predicate
+  # falla-cerrado → 0 chunks devueltos, aunque el texto sea relevante.
+  - id: gobernanza_ambito_incorrecto
+    perfil: tecnico_medioambiente
+    texto: "¿Qué puntos superaron el límite permitido esta semana?"
+    espera:
+      status: 200
+      max_chunks: 0
 
   # ── Sin match semántico ──────────────────────────────────────────────────
   # La API retorna top-K sin umbral de score: texto aleatorio devuelve 10 chunks
