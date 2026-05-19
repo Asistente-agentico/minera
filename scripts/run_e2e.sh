@@ -137,7 +137,7 @@ docker run --rm \
     -v "${REPO_RAIZ}:/cliente/minera" \
     "${EXTRA_MOUNTS[@]+"${EXTRA_MOUNTS[@]}"}" \
     -e "ILLARI_E2E_SUITE=/cliente/minera/tests/e2e_lectura.yaml" \
-    -e "ILLARI_E2E_DOMINIO=/cliente/minera/configuracion/dominio.yaml" \
+    -e "ILLARI_E2E_CLIENTE=/cliente/minera" \
     -e "MASTER_SECRET=${MASTER_SECRET}" \
     -e "ILLARI_E2E_VERBOSE=${VERBOSE_VAL}" \
     --entrypoint sh \

@@ -3,11 +3,11 @@
 #
 # Fases:
 #   1. Borrar qdrant_data/ (partida limpia para cuando se integre MV+MK).
-#   2. Docker: ejecutar M1 CLI (dbt → chunker → chunks_generados.json).
+#   2. Docker: ejecutar M1 CLI (dbt → chunker → chunks_generados_dev.json).
 #      MV no se inicia (mk/ no está en la imagen Docker aún — deuda pendiente).
-#      M1 escribe chunks_generados.json antes del intento a MV y continúa
-#      con degradación silenciosa si MV no responde.
-#   3. Local: pytest valida chunks_generados.json contra e2e_escritura.yaml.
+#      M1 escribe chunks_generados_dev.json (--dev) antes del intento a MV y
+#      continúa con degradación silenciosa si MV no responde.
+#   3. Local: pytest valida chunks_generados_dev.json contra e2e_escritura.yaml.
 #
 # Uso:
 #   bash scripts/run_e2e_escritura.sh
@@ -102,6 +102,7 @@ PIPELINE_CMD='
 pip install fastembed -q 2>/dev/null
 export MINERA_DB_PATH=/cliente/minera/datos/minera.duckdb
 python -m m1.core.orquestador.cli ejecutar \
+    --dev \
     --config /cliente/minera/configuracion \
     --schemas /app/configuracion/schemas \
     --medallon /cliente/minera/modelos \
@@ -128,20 +129,20 @@ if [[ $DOCKER_EXIT -ne 0 ]]; then
     exit "$DOCKER_EXIT"
 fi
 
-if [[ ! -f "${REPO_RAIZ}/datos/chunks_generados.json" ]]; then
+if [[ ! -f "${REPO_RAIZ}/datos/chunks_generados_dev.json" ]]; then
     echo ""
-    echo "FAILED: chunks_generados.json no fue generado por el pipeline." >&2
+    echo "FAILED: chunks_generados_dev.json no fue generado por el pipeline." >&2
     exit 1
 fi
 
 echo ""
-echo "  Pipeline completado. chunks_generados.json generado."
+echo "  Pipeline completado. chunks_generados_dev.json generado."
 echo ""
 
 # ---------------------------------------------------------------------------
 # Fase 3 — Validación local con pytest
 # ---------------------------------------------------------------------------
-echo "[3/3] Validando chunks_generados.json con pytest..."
+echo "[3/3] Validando chunks_generados_dev.json con pytest..."
 echo ""
 
 ILLARI_E2E_ESCRITURA="${SUITE_ABS}" \
