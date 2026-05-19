@@ -14,7 +14,7 @@
 #   bash scripts/run_e2e_escritura.sh tests/e2e_escritura.yaml
 #
 # Variables de entorno:
-#   ILLARI_TAG  — tag de la imagen Docker (default: dev-0.6.6)
+#   ILLARI_TAG  — tag de la imagen Docker (default: dev-0.7.0)
 #
 # Nota: MASTER_SECRET no es necesario para este script. El orquestador M1
 # envía chunks en texto plano a MV; el cifrado lo hace MV (no M1).
@@ -25,7 +25,7 @@ set -euo pipefail
 # Configuración
 # ---------------------------------------------------------------------------
 IMAGEN_BASE="ghcr.io/asistente-agentico/illari"
-IMAGEN="${IMAGEN_BASE}:${ILLARI_TAG:-dev-0.6.6}"
+IMAGEN="${IMAGEN_BASE}:${ILLARI_TAG:-dev-0.7.0}"
 
 REPO_RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
 SUITE_REL="tests/e2e_escritura.yaml"
