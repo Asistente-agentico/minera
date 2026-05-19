@@ -1,0 +1,37 @@
+version: "1.0"
+metadata:
+  cliente_id: minera_prueba
+
+reglas:
+
+  # P00002 — Resumen anual de concentración por planta.
+  - regla: P00002_M00002
+    identidad:
+      estado: vigente
+      descripcion: "Resumen anual de polvo respirable por planta: concentración promedio, máxima y mínima, y registros que superaron el límite interno."
+
+    chunk_id:
+      columns: [planta, anio]
+      separator: "_"
+
+    privacidad:
+      pii_estrategia: tokens
+      pii_tokens: []
+      estrategia_olvido: borrar_chunk
+
+    gobernanza:
+      dimensiones:
+        planta: column:planta
+        ambito: seguridad_ocupacional
+        clasificacion: interno
+      dimensiones_en_texto: []
+
+    vigencia:
+      politica_vigencia: preservar
+      hereda_chunks_de: []
+
+    criterios_calidad:
+      threshold: 0.80
+      recall_min: 0.70
+      expected_count_min: 1
+      expected_count_max: 20

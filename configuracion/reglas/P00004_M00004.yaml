@@ -1,0 +1,37 @@
+version: "1.0"
+metadata:
+  cliente_id: minera_prueba
+
+reglas:
+
+  # P00004 — Todas las mediciones de la última jornada global.
+  - regla: P00004_M00004
+    identidad:
+      estado: vigente
+      descripcion: "Todas las mediciones de la última jornada de medición global (con y sin exceso del límite)."
+
+    chunk_id:
+      columns: [planta, punto_evaluacion]
+      separator: "_"
+
+    privacidad:
+      pii_estrategia: tokens
+      pii_tokens: [operador, tecnico]
+      estrategia_olvido: borrar_chunk
+
+    gobernanza:
+      dimensiones:
+        planta: column:planta
+        ambito: seguridad_ocupacional
+        clasificacion: interno
+      dimensiones_en_texto: []
+
+    vigencia:
+      politica_vigencia: preservar
+      hereda_chunks_de: []
+
+    criterios_calidad:
+      threshold: 0.80
+      recall_min: 0.70
+      expected_count_min: 1
+      expected_count_max: 50

@@ -1,0 +1,37 @@
+version: "1.0"
+metadata:
+  cliente_id: minera_prueba
+
+reglas:
+
+  # P00001 — Puntos que superaron el límite interno en la semana vigente.
+  - regla: P00001_M00001
+    identidad:
+      estado: vigente
+      descripcion: "Puntos de medición que superaron el límite interno (2,5 mg/m³) en la semana vigente, con semáforo de concentración."
+
+    chunk_id:
+      columns: [planta, punto_evaluacion, semana]
+      separator: "_"
+
+    privacidad:
+      pii_estrategia: tokens
+      pii_tokens: [operador, tecnico]
+      estrategia_olvido: etiqueta
+
+    gobernanza:
+      dimensiones:
+        planta: column:planta
+        ambito: seguridad_ocupacional
+        clasificacion: restringido
+      dimensiones_en_texto: []
+
+    vigencia:
+      politica_vigencia: preservar
+      hereda_chunks_de: []
+
+    criterios_calidad:
+      threshold: 0.80
+      recall_min: 0.70
+      expected_count_min: 1
+      expected_count_max: 50
