@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# run_e2e.sh — Descarga la imagen Illari y ejecuta la suite E2E de minera.
+# run_e2e_lectura.sh — Descarga la imagen Illari y ejecuta la suite E2E de lectura.
 #
-# Equivalente bash de run_e2e.ps1 (para entornos Linux/macOS).
+# Equivalente bash de run_e2e_lectura.ps1 (para entornos Linux/macOS).
 # La imagen monolítica contiene M1, M2, MV y MA — docker pull los descarga todos.
 #
 # Uso:
-#   bash scripts/run_e2e.sh                         # modo normal
-#   bash scripts/run_e2e.sh --dev                   # verbose: detalle de chunks y respuestas
-#   bash scripts/run_e2e.sh tests/e2e_lectura.yaml          # suite explícita
-#   bash scripts/run_e2e.sh tests/e2e_lectura.yaml --dev    # suite + verbose
+#   bash scripts/run_e2e_lectura.sh                         # modo normal
+#   bash scripts/run_e2e_lectura.sh --dev                   # verbose: detalle de chunks y respuestas
+#   bash scripts/run_e2e_lectura.sh tests/e2e_lectura.yaml          # suite explícita
+#   bash scripts/run_e2e_lectura.sh tests/e2e_lectura.yaml --dev    # suite + verbose
 #
 # Variables de entorno:
 #   MASTER_SECRET    — secreto de cifrado usado al indexar (obligatorio)
