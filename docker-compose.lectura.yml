@@ -40,7 +40,7 @@ services:
     <<: *base
     entrypoint: >
       sh -c "pip install fastembed -q 2>/dev/null &&
-             python -m mv.api.main"
+             uvicorn mv.api.main:app --host 0.0.0.0 --port 8002"
     depends_on:
       mk:
         condition: service_healthy
