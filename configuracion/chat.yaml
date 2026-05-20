@@ -1,0 +1,12 @@
+version: "1.0"
+llm:
+  proveedor: eco
+  modelo: eco-stub
+mv:
+  base_url: http://mv-api:8002
+  timeout_segundos: 60
+  reintentos: 2
+memoria:
+  ultimos_n_turnos: 5
+prompt:
+  sistema: "Eres un asistente experto en seguridad ocupacional. Usa solo el [CONTEXTO] para responder."
