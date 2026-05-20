@@ -59,10 +59,6 @@ if (-not (Test-Path $suiteAbs)) {
     Write-Error "Suite no encontrada: $suiteAbs"
     exit 1
 }
-if (-not (Test-Path (Join-Path $repoRaiz "datos\minera.duckdb"))) {
-    Write-Error "datos/minera.duckdb no encontrado. Ejecuta 'dbt seed' y 'dbt run' primero."
-    exit 1
-}
 if (-not (Test-Path $composeAbs)) {
     Write-Error "$composeFile no encontrado en $repoRaiz"
     exit 1

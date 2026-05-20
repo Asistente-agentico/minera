@@ -62,12 +62,6 @@ if [[ ! -f "$SUITE_ABS" ]]; then
     exit 1
 fi
 
-if [[ ! -f "${REPO_RAIZ}/datos/minera.duckdb" ]]; then
-    echo "Error: datos/minera.duckdb no encontrado." >&2
-    echo "Ejecuta 'dbt seed' y 'dbt run' en modelos/ antes de correr esta suite." >&2
-    exit 1
-fi
-
 if [[ ! -f "${REPO_RAIZ}/${COMPOSE_FILE}" ]]; then
     echo "Error: ${COMPOSE_FILE} no encontrado en ${REPO_RAIZ}" >&2
     exit 1

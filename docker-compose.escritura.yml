@@ -57,6 +57,10 @@ services:
     <<: *base
     entrypoint: >
       sh -c "pip install fastembed -q 2>/dev/null &&
+             dbt seed --project-dir /cliente/minera/modelos
+                      --profiles-dir /cliente/minera/modelos &&
+             dbt run  --project-dir /cliente/minera/modelos
+                      --profiles-dir /cliente/minera/modelos &&
              python -m m1.core.orquestador.cli ejecutar
                --dev
                --config /cliente/minera/configuracion
