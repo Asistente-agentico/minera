@@ -147,15 +147,19 @@ echo "Output : ${OUT_FILE}"
 echo ""
 
 # ---------------------------------------------------------------------------
-# Fase 1 — Descargar imagen
+# Fase 1 — Descargar imagen (omite pull si ya existe localmente)
 # ---------------------------------------------------------------------------
-echo "[1/3] Descargando imagen Docker..."
-ILLARI_TAG="${ILLARI_TAG:-dev-0.7.2}" \
-MASTER_SECRET="${MASTER_SECRET}" \
-CHAT_YAML="${CHAT_YAML}" \
-M2_PIP_EXTRA="${M2_PIP_EXTRA}" \
-GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
-docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" pull
+if docker image inspect "${IMAGEN}" &>/dev/null; then
+    echo "[1/3] Imagen ${IMAGEN} encontrada localmente — omitiendo pull."
+else
+    echo "[1/3] Descargando imagen Docker..."
+    ILLARI_TAG="${ILLARI_TAG:-dev-0.7.2}" \
+    MASTER_SECRET="${MASTER_SECRET}" \
+    CHAT_YAML="${CHAT_YAML}" \
+    M2_PIP_EXTRA="${M2_PIP_EXTRA}" \
+    GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
+    docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" pull
+fi
 echo ""
 
 # ---------------------------------------------------------------------------
