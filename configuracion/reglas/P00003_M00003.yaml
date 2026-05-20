@@ -2,36 +2,35 @@ version: "1.0"
 metadata:
   cliente_id: minera_prueba
 
-reglas:
+# P00003 — Detalle de la medición con mayor concentración histórica por área.
+regla:
+  id: P00003_M00003
+  identidad:
+    estado: vigente
+    descripcion: "Detalle completo (fecha, operador, técnico, horario) de la medición con mayor concentración histórica por área."
 
-  # P00003 — Detalle de la medición con mayor concentración histórica por área.
-  - regla: P00003_M00003
-    identidad:
-      estado: vigente
-      descripcion: "Detalle completo (fecha, operador, técnico, horario) de la medición con mayor concentración histórica por área."
+  chunk_id:
+    columns: [planta]
+    separator: "_"
 
-    chunk_id:
-      columns: [planta]
-      separator: "_"
+  privacidad:
+    pii_estrategia: tokens
+    pii_tokens: [operador, operador_dni, tecnico, tecnico_dni]
+    estrategia_olvido: borrar_chunk
 
-    privacidad:
-      pii_estrategia: tokens
-      pii_tokens: [operador, operador_dni, tecnico, tecnico_dni]
-      estrategia_olvido: borrar_chunk
+  gobernanza:
+    dimensiones:
+      planta: column:planta
+      ambito: seguridad_ocupacional
+      clasificacion: restringido
+    dimensiones_en_texto: []
 
-    gobernanza:
-      dimensiones:
-        planta: column:planta
-        ambito: seguridad_ocupacional
-        clasificacion: restringido
-      dimensiones_en_texto: []
+  vigencia:
+    politica_vigencia: preservar
+    hereda_chunks_de: []
 
-    vigencia:
-      politica_vigencia: preservar
-      hereda_chunks_de: []
-
-    criterios_calidad:
-      threshold: 0.80
-      recall_min: 0.70
-      expected_count_min: 1
-      expected_count_max: 10
+  criterios_calidad:
+    threshold: 0.80
+    recall_min: 0.70
+    expected_count_min: 1
+    expected_count_max: 10

@@ -16,7 +16,7 @@
     Ruta al archivo YAML de la suite. Por defecto: tests/e2e_escritura.yaml
 
 .PARAMETER Imagen
-    Imagen Docker del producto. Por defecto: ghcr.io/asistente-agentico/illari:dev-0.7.0
+    Imagen Docker del producto. Por defecto: ghcr.io/asistente-agentico/illari:dev-0.7.1
 
 .EXAMPLE
     .\scripts\run_e2e_escritura.ps1
@@ -25,7 +25,7 @@
 
 param(
     [string]$Suite  = "tests/e2e_escritura.yaml",
-    [string]$Imagen = "ghcr.io/asistente-agentico/illari:dev-0.7.0"
+    [string]$Imagen = "ghcr.io/asistente-agentico/illari:dev-0.7.1"
 )
 
 Set-StrictMode -Version Latest

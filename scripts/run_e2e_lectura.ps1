@@ -19,7 +19,7 @@
     variable de entorno MASTER_SECRET.
 
 .PARAMETER Imagen
-    Imagen Docker del producto. Por defecto: ghcr.io/asistente-agentico/illari:dev-0.7.0
+    Imagen Docker del producto. Por defecto: ghcr.io/asistente-agentico/illari:dev-0.7.1
 
 .PARAMETER Dev
     Activa modo verbose: imprime detalle de chunks y respuestas por escenario.
@@ -33,7 +33,7 @@
 param(
     [string]$Suite        = "tests/e2e_lectura.yaml",
     [string]$MasterSecret = $env:MASTER_SECRET,
-    [string]$Imagen       = "ghcr.io/asistente-agentico/illari:dev-0.7.0",
+    [string]$Imagen       = "ghcr.io/asistente-agentico/illari:dev-0.7.1",
     [switch]$Dev
 )
 

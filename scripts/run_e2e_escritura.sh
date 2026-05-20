@@ -2,9 +2,9 @@
 # run_e2e_escritura.sh — Ejecuta el pipeline M1 en Docker y valida la salida.
 #
 # Fases:
-#   1. Borrar qdrant_data/ (partida limpia para cuando se integre MV+MK).
-#   2. Docker: ejecutar M1 CLI (dbt → chunker → chunks_generados_dev.json).
-#      MV no se inicia (mk/ no está en la imagen Docker aún — deuda pendiente).
+#   1. docker pull (antes de cualquier cambio destructivo).
+#   2. Borrar qdrant_data/ y ejecutar M1 CLI (dbt → chunker → chunks_generados_dev.json).
+#      MV no se inicia en esta suite (valida solo el pipeline M1).
 #      M1 escribe chunks_generados_dev.json (--dev) antes del intento a MV y
 #      continúa con degradación silenciosa si MV no responde.
 #   3. Local: pytest valida chunks_generados_dev.json contra e2e_escritura.yaml.
@@ -14,7 +14,7 @@
 #   bash scripts/run_e2e_escritura.sh tests/e2e_escritura.yaml
 #
 # Variables de entorno:
-#   ILLARI_TAG  — tag de la imagen Docker (default: dev-0.7.0)
+#   ILLARI_TAG  — tag de la imagen Docker (default: dev-0.7.1)
 #
 # Nota: MASTER_SECRET no es necesario para este script. El orquestador M1
 # envía chunks en texto plano a MV; el cifrado lo hace MV (no M1).
@@ -25,7 +25,7 @@ set -euo pipefail
 # Configuración
 # ---------------------------------------------------------------------------
 IMAGEN_BASE="ghcr.io/asistente-agentico/illari"
-IMAGEN="${IMAGEN_BASE}:${ILLARI_TAG:-dev-0.7.0}"
+IMAGEN="${IMAGEN_BASE}:${ILLARI_TAG:-dev-0.7.1}"
 
 REPO_RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
 SUITE_REL="tests/e2e_escritura.yaml"
@@ -78,24 +78,28 @@ echo "Output : ${OUT_FILE}"
 echo ""
 
 # ---------------------------------------------------------------------------
-# Fase 1 — Borrar qdrant_data/ (partida limpia)
+# Fase 1 — Descargar imagen (antes de cualquier cambio destructivo)
 # ---------------------------------------------------------------------------
-echo "[1/3] Limpiando qdrant_data/..."
+echo "[1/3] Descargando imagen Docker..."
+docker pull "${IMAGEN}"
+echo ""
+
+# ---------------------------------------------------------------------------
+# Fase 2 — Borrar qdrant_data/ y ejecutar pipeline M1
+# ---------------------------------------------------------------------------
+echo "[2/3] Ejecutando pipeline M1 en Docker..."
+echo "  Imagen: ${IMAGEN}"
+echo "  (MV no iniciado — esta suite valida solo el pipeline M1)"
+echo ""
+
 QDRANT_DIR="${REPO_RAIZ}/qdrant_data"
+echo "  Limpiando qdrant_data/..."
 if [[ -d "$QDRANT_DIR" ]]; then
     rm -rf "$QDRANT_DIR"
     echo "  Eliminado: ${QDRANT_DIR}"
 else
     echo "  qdrant_data/ no existe, nada que limpiar."
 fi
-echo ""
-
-# ---------------------------------------------------------------------------
-# Fase 2 — Docker: M1 CLI (dbt + chunker → chunks_generados.json)
-# ---------------------------------------------------------------------------
-echo "[2/3] Ejecutando pipeline M1 en Docker..."
-echo "  Imagen: ${IMAGEN}"
-echo "  (MV no iniciado — mk/ no está en la imagen; MV se integra en próxima versión)"
 echo ""
 
 PIPELINE_CMD='
@@ -110,8 +114,6 @@ python -m m1.core.orquestador.cli ejecutar \
     --raiz /cliente/minera
 '
 
-docker pull "${IMAGEN}"
-echo ""
 
 docker run --rm \
     -v "${REPO_RAIZ}:/cliente/minera" \

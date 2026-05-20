@@ -12,7 +12,7 @@
 #
 # Variables de entorno:
 #   MASTER_SECRET    — secreto de cifrado usado al indexar (obligatorio)
-#   ILLARI_TAG       — tag de la imagen Docker (default: dev-0.7.0)
+#   ILLARI_TAG       — tag de la imagen Docker (default: dev-0.7.1)
 #
 # Si MASTER_SECRET no está en el entorno, se intenta leer desde .env en la raíz del repo.
 
@@ -22,7 +22,7 @@ set -euo pipefail
 # Configuración
 # ---------------------------------------------------------------------------
 IMAGEN_BASE="ghcr.io/asistente-agentico/illari"
-IMAGEN="${IMAGEN_BASE}:${ILLARI_TAG:-dev-0.7.0}"
+IMAGEN="${IMAGEN_BASE}:${ILLARI_TAG:-dev-0.7.1}"
 
 REPO_RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
 SUITE_REL="tests/e2e_lectura.yaml"

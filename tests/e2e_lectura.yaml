@@ -14,7 +14,7 @@
 # Campo 'contiene_texto': lista de términos que deben aparecer en la respuesta
 #   del agente (AdaptadorEco devuelve el prompt que incluye el texto de chunks).
 #   Los valores se derivan de los seeds y plantillas del cliente
-#   (semaforo_polvo_respirable.csv, plantillas/P000XX_M000XX.txt).
+#   (semaforo_polvo_respirable.csv, plantillas/P000XX_M000XX.j2).
 
 suite: minera
 version: "1.0"
@@ -45,9 +45,9 @@ escenarios:
 
   # ── P1 — Puntos sobre el límite esta semana ──────────────────────────────
   # M00001: devuelve una fila por punto que supera 2.5 mg/m³ en la semana vigente.
-  # Plantilla: "... concentración de polvo respirable {concentracion_mg_m3} mg/m³,
-  #   semáforo {etiqueta_semaforo} ({veces_sobre_limite}x el límite interno de
-  #   {limite_interno_mg_m3} mg/m³) ..."
+  # Plantilla: "... concentración de polvo respirable {{ concentracion_mg_m3 }} mg/m³,
+  #   semáforo {{ etiqueta_semaforo }} ({{ veces_sobre_limite }}x el límite interno de
+  #   {{ limite_interno_mg_m3 }} mg/m³) ..."
   # seed semaforo: etiqueta "peligroso" para nivel 4 (2.5–5.0 mg/m³)
   - id: P00001_M00001_sobre_limite_auditor
     perfil: auditor_ambiental
@@ -72,8 +72,8 @@ escenarios:
 
   # ── P2 — Resumen anual por área ──────────────────────────────────────────
   # M00002: una fila por planta con concentracion_promedio, max, min y pct sobre límite.
-  # Plantilla: "... {semanas_medidas} {semanas_label} en {puntos_medidos} {puntos_label}
-  #   de control. Concentración promedio {concentracion_promedio_mg_m3} mg/m³, ..."
+  # Plantilla: "... {{ semanas_medidas }} {{ semanas_label }} en {{ puntos_medidos }} {{ puntos_label }}
+  #   de control. Concentración promedio {{ concentracion_promedio_mg_m3 }} mg/m³, ..."
   # Nota: para "historial del año" el motor retorna M00003 (peak histórico por planta)
   # como más similar semánticamente. M00002 (estadísticas anuales) no queda en el
   # top-10. Los términos validados son los que SÍ aparecen en los chunks devueltos.
@@ -89,7 +89,7 @@ escenarios:
 
   # ── P3 — Condiciones del peak histórico ─────────────────────────────────
   # M00003: detalle de la medición con mayor concentración histórica por planta.
-  # Plantilla: "Concentración histórica máxima en planta {planta}: {concentracion_mg_m3}
+  # Plantilla: "Concentración histórica máxima en planta {{ planta }}: {{ concentracion_mg_m3 }}
   #   mg/m³ en punto ..."
   # pii_tokens: [operador, operador_dni, tecnico, tecnico_dni] → aparecen tokenizados
   - id: P00003_M00003_peak_historico
@@ -100,12 +100,12 @@ escenarios:
       min_chunks: 1
       contiene_texto:
         - "mg/m³"
-        - "límite interno"   # parte literal de la plantilla P00003_M00003.txt
+        - "límite interno"   # parte literal de la plantilla P00003_M00003.j2
 
   # ── P4 — Última jornada ─────────────────────────────────────────────────
   # M00004: todas las mediciones de la sesión más reciente a nivel global.
-  # Plantilla: "... última jornada (semana {semana} de {anio}): concentración
-  #   {concentracion_mg_m3} mg/m³, semáforo {etiqueta_semaforo} ..."
+  # Plantilla: "... última jornada (semana {{ semana }} de {{ anio }}): concentración
+  #   {{ concentracion_mg_m3 }} mg/m³, semáforo {{ etiqueta_semaforo }} ..."
   # operador_chancado tiene planta=["Pre-Chancado"]. Los chunks top-10 para
   # "última jornada" son de CDM/Chancado → governance falla-cerrado → 0 chunks.
   - id: P00004_M00004_ultima_jornada_operador
@@ -113,7 +113,7 @@ escenarios:
     texto: "¿Cómo fue la última jornada de medición?"
     espera:
       status: 200
-      max_chunks: 0   # parte literal de la plantilla P00004_M00004.txt
+      max_chunks: 0   # governance bloquea planta fuera del ámbito del perfil
 
   - id: P00004_M00004_ultima_jornada_auditor
     perfil: auditor_ambiental
