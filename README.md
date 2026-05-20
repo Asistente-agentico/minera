@@ -4,7 +4,7 @@ Configuración del Asistente Virtual para el caso **Minera**: monitoreo de conce
 de polvo respirable en puntos de medición de faena. Responde 4 preguntas de negocio
 sobre mediciones ambientales bajo DS 594.
 
-Compatible con: `asistente-agentico/diseno v0.5.0+`
+Compatible con: `asistente-agentico/illari v0.7.1+`
 
 > **Este repositorio es del equipo de servicio.** El cliente nunca lo ve.
 > La configuración y los modelos de transformación viajan dentro de la imagen Docker.
@@ -16,14 +16,20 @@ Compatible con: `asistente-agentico/diseno v0.5.0+`
 ```
 configuracion/
   dominio.yaml         — dimensiones de gobernanza y configuración del dominio
+  permisos.yaml        — usuarios, roles y dimensiones de gobernanza por usuario
   fuentes.yaml         — fuentes de datos del lakehouse del cliente
   aterrizaje.yaml      — configuración de la zona de aterrizaje
   reglas/
-    reglas.yaml        — 4 reglas (P00001–P00004), una por pregunta de negocio
-  consultas/
-    P000XX_M000XX.sql  — consulta al mart gold correspondiente (columnas explícitas)
-  plantillas/
-    P000XX_M000XX.txt  — texto de respuesta con variables {campo}
+    P000XX_M000XX.yaml — definición de regla (una por archivo, formato regla: {id: ...})
+    consultas/
+      P000XX_M000XX.sql     — consulta al mart oro correspondiente
+    plantillas/
+      P000XX_M000XX.j2      — plantilla Jinja2 de respuesta con {{ campo }}
+  reportes/
+    definiciones/
+      concentracion_anual.yaml  — reporte M3 sobre oro_p00002
+    consultas/
+      concentracion_anual.sql   — consulta SQL del reporte
 
 modelos/               — capa de transformación (interna; no expuesta al cliente)
   dbt_project.yml
@@ -35,22 +41,22 @@ modelos/               — capa de transformación (interna; no expuesta al clie
   instantaneos/        — historial por fuente (una instantánea por planilla)
   semillas/            — tablas de referencia (semáforo de límites)
 
-analisis/
-  preguntas.md         — contexto de negocio: preguntas, reglas y decisiones de diseño
-
 scripts/
-  preparar_landing.py    — extrae hojas del xlsx en formato ancho (etiqueta, column01…columnNN)
-  run_e2e_lectura.ps1    — E2E completo lectura: MK+MV+M1 embed+M2 pytest en un contenedor
-  run_e2e_escritura.ps1  — E2E completo escritura: MK+MV+M1 embed, valida chunks en Qdrant
-  check_marts.py         — diagnóstico: cuenta filas en marts gold y silver
-  check_snapshots.py     — diagnóstico: cuenta filas y columnas en los snapshots
+  preparar_landing.py       — extrae hojas del xlsx en formato ancho
+  run_e2e_escritura.sh/.ps1 — E2E escritura: MK → MV (BDV) ← M1 via docker compose
+  run_e2e_lectura.sh/.ps1   — E2E lectura: M2 + MA + MV contra BDV
+  check_marts.py             — diagnóstico: cuenta filas en marts oro y silver
+  check_snapshots.py         — diagnóstico: cuenta filas y columnas en snapshots
+
+docker-compose.escritura.yml  — orquesta MK + MV + M1 para el E2E de escritura
 
 tests/
-  e2e_lectura.yaml     — suite E2E lectura (M2): 4 perfiles, 10 escenarios polvo respirable
-  e2e_escritura.yaml   — suite E2E escritura (M1→MV): conteo, gobernanza, PII, cifrado
+  e2e_lectura.yaml       — suite E2E lectura (M2): 4 perfiles, 11 escenarios
+  e2e_escritura.yaml     — suite E2E escritura (M1): conteo, gobernanza, PII, cifrado
+  e2e_m3_reportes.yaml   — suite E2E reportes (M3): 12 escenarios
 
 datos/                 — gitignoreado (PII + datos del cliente; solo en ambiente local)
-qdrant_data/           — gitignoreado (vector store local generado por chunker --embed)
+  qdrant_mv/           — BDV Qdrant embebida generada por el E2E escritura
 ```
 
 ---
@@ -59,21 +65,20 @@ qdrant_data/           — gitignoreado (vector store local generado por chunker
 
 | Artefacto | Descripción |
 |---|---|
-| Imagen Docker | `ghcr.io/asistente-agentico/minera:vX.Y.Z` |
+| Imagen Docker | `ghcr.io/asistente-agentico/illari:vX.Y.Z` |
 | `docker-compose.yml` | Levanta el servicio; referencia la imagen y el `.env` |
 | `.env.example` | Variables de conexión al lakehouse; el cliente llena sus credenciales |
 
 El cliente no ve ni `configuracion/`, ni `modelos/`, ni ninguna tecnología interna.
 
 > Artefactos de despliegue (`Dockerfile`, `docker-compose.yml`, `.env.example`) pendientes.
-> Se generan al cablear el pipeline de build en el sprint de deployment.
 
 ---
 
 ## Variables de entorno del cliente (`.env`)
 
 ```
-DB_TIPO=duckdb            # duckdb | postgresql | bigquery | athena | ...
+DB_TIPO=duckdb
 DB_HOST=
 DB_PUERTO=
 DB_USUARIO=
@@ -82,8 +87,6 @@ DB_NOMBRE=
 ASISTENTE_PUERTO=8000
 ```
 
-El contenedor usa estas variables para configurar la conexión al lakehouse internamente.
-
 ---
 
 ## Desarrollo (equipo de servicio)
@@ -91,101 +94,73 @@ El contenedor usa estas variables para configurar la conexión al lakehouse inte
 ### Prerrequisitos
 
 - Python 3.12+
-- dbt-core 1.11+ con el adapter del lakehouse del cliente (`dbt-duckdb`, `dbt-bigquery`, etc.)
-- Docker
+- dbt-core 1.11+ con el adapter del lakehouse (`dbt-duckdb`)
+- Docker con soporte de Compose v2 (`docker compose`)
 
 ### Linter de configuración
 
 ```bash
-# Desde el repo del producto (diseno)
-python -m scripts.lint_configuracion /ruta/a/minera/configuracion/reglas/reglas.yaml
+# Desde el repo del producto (Illari)
+python -m scripts.lint_configuracion /ruta/a/minera/configuracion
 ```
 
 ### Pipeline de preparación (desde el xlsx del cliente)
 
-El pipeline convierte la planilla Excel de mediciones en chunks semánticos indexados
-en Qdrant. Ejecutar desde la imagen del producto o con las dependencias instaladas:
-
 ```bash
-# 1. xlsx → CSVs en formato ancho (una fila por atributo, columnas column01…columnNN)
+# 1. xlsx → CSVs en formato ancho
 python scripts/preparar_landing.py --raiz /ruta/a/minera
 
-# 2. CSVs → DuckDB (zona de aterrizaje)
-python scripts/init_duckdb.py --raiz /ruta/a/minera
-
-# 3. dbt: seeds → snapshots → modelos
+# 2. dbt: seeds → snapshots → modelos
 cd modelos
-dbt seed      # semillas (semáforo de límites, alias de personas)
-dbt snapshot  # captura histórico desde landing
-dbt run       # construye bronce → silver → oro (M00001–M00004)
-
-# 4. Chunker: marts gold → chunks cifrados → Qdrant
-python -m core.agentes.chunker --raiz /ruta/a/minera --embed
+dbt seed
+dbt snapshot
+dbt run
 ```
-
-Requiere `modelos/profiles.yml` local (gitignoreado) y la variable de entorno
-`MASTER_SECRET` para el cifrado de chunks.
-
-### Modelos de transformación (solo)
-
-```bash
-cd modelos
-dbt deps                  # instalar dependencias
-dbt snapshot              # capturar histórico desde landing
-dbt run                   # construir bronce → silver → oro
-dbt test                  # validar constraints y freshness
-```
-
-Requiere `modelos/profiles.yml` local (gitignoreado). Ver `.env.example` como referencia.
 
 ### Tests E2E
 
-Dos suites complementarias, cada una con su propio script. Ambos son pipelines
-**autocontenidos**: levantan todos los servicios dentro del contenedor, ejecutan
-los tests y los detienen. No requieren servicios externos en ejecución.
+Dos suites complementarias que se ejecutan en orden:
 
-#### Suite lectura — `run_e2e_lectura.ps1`
+#### E2E escritura (M1 → MV → BDV)
 
-Valida el pipeline RAG completo M1→MV→M2:
-- M1 embebe los marts gold y sube los chunks cifrados a Qdrant via MV.
-- M2 responde consultas del usuario consultando MV (búsqueda vectorial + gobernanza).
+Levanta MK, MV y M1 via docker compose. M1 corre el pipeline completo y deja
+los chunks cifrados en `datos/qdrant_mv/` (Qdrant embebido de MV). Requiere `MASTER_SECRET`.
 
-**Prerequisito**: `datos/minera.duckdb` presente (`dbt seed && dbt run`).
+```bash
+# Linux/macOS
+export MASTER_SECRET="<secreto>"
+bash scripts/run_e2e_escritura.sh
 
-```powershell
-# Prerequisito: minera.duckdb debe existir
-# cd modelos && dbt seed && dbt run
-
-.\scripts\run_e2e_lectura.ps1 -Dev
-# -Dev: monta tests/ local de Illari + verbose pytest
+# Windows
+$env:MASTER_SECRET = "<secreto>"
+.\scripts\run_e2e_escritura.ps1
 ```
 
-11 escenarios: 5 de negocio (P1×2 perfiles + P2 + P3 + P4), 2 de autenticación,
+#### E2E lectura (M2 + MA + MV)
+
+Valida consultas RAG contra la BDV poblada por la suite de escritura.
+Requiere que `datos/qdrant_mv/` exista (correr escritura primero).
+
+```bash
+# Linux/macOS
+export MASTER_SECRET="<secreto>"
+bash scripts/run_e2e_lectura.sh
+
+# Windows
+$env:MASTER_SECRET = "<secreto>"
+.\scripts\run_e2e_lectura.ps1
+```
+
+11 escenarios lectura: 5 de negocio (P1×2 perfiles + P2 + P3 + P4), 2 de autenticación,
 1 de payload inválido, 1 sin match semántico, 2 de gobernanza (acceso denegado).
 
-#### Suite escritura — `run_e2e_escritura.ps1`
+Los resultados se guardan en `tests/results/` (gitignoreado).
 
-Valida el pipeline de escritura M1→MV: conteo de chunks, gobernanza, PII y cifrado.
+#### Notas de implementación (Windows/WSL2)
 
-```powershell
-.\scripts\run_e2e_escritura.ps1 -Dev
-```
-
-#### Resultado
-
-Ambos scripts guardan el resultado en:
-
-```
-tests/results/{suite}-v{version}[-dev]-{timestamp}.txt
-```
-
-El directorio `tests/results/` está gitignoreado.
-
-#### Notas de implementación
-
-Los scripts montan el repo como bind-mount pero copian los datos del cliente a
-`/tmp/minera` (tmpfs nativo Linux) antes de arrancar Qdrant. Esto evita errores
-de bloqueo de archivos (`portalocker` falla sobre NTFS/9P de WSL2).
+Los scripts `.ps1` copian los datos del cliente a `/tmp/minera` (tmpfs nativo Linux)
+antes de arrancar Qdrant. Esto evita errores de bloqueo de archivos (`portalocker`
+falla sobre NTFS/9P de WSL2).
 
 El modelo de embeddings (`paraphrase-multilingual-MiniLM-L12-v2`) se pre-descarga
 en el contenedor antes de arrancar MV para garantizar que el health-check pase
