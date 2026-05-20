@@ -1,0 +1,176 @@
+# Suite E2E reportes (M3) — caso Minera
+# Dominio: seguridad ocupacional — concentración de polvo respirable (DS 594).
+#
+# Ejecutar desde el repo Illari:
+#   export ILLARI_E2E_M3=/ruta/a/minera/tests/e2e_m3_reportes.yaml
+#   export ILLARI_E2E_CLIENTE=/ruta/a/minera
+#   pytest tests/e2e_m3/ -v -m e2e
+#
+# Prerequisito: dbt run ejecutado (datos/minera.duckdb con vista oro_p00002).
+# No requiere MASTER_SECRET (M3 no usa MV ni Qdrant).
+#
+# Reporte probado: concentracion_anual (oro_p00002).
+#   16 filas = 8 plantas × 2 años (2025 y 2026).
+#   Gobernanza activa: solo planta (tipo enum).
+#   ambito y clasificacion del JWT no aplican (oro_p00002 no tiene esas columnas).
+#
+# Perfiles:
+#   jefe_seguridad        → planta=["Molienda SAG"]   → 2 filas
+#   operador_chancado     → planta=["Pre-Chancado"]   → 2 filas
+#   auditor_ambiental     → planta=[8 plantas]        → 16 filas
+#   tecnico_medioambiente → planta=[8 plantas]        → 16 filas
+
+suite: minera_m3
+version: "1.0"
+descripcion: "Reportes M3 — concentración anual por planta (oro_p00002), 4 perfiles"
+
+perfiles:
+  - id: jefe_seguridad
+    descripcion: "Jefe de seguridad — solo Molienda SAG"
+    user_id: "jefe.seguridad@test"
+    contrasena_test: "test-illari-2026"
+
+  - id: operador_chancado
+    descripcion: "Operador Pre-Chancado — solo su planta"
+    user_id: "operador.chancado@test"
+    contrasena_test: "test-illari-2026"
+
+  - id: auditor_ambiental
+    descripcion: "Auditor — acceso a todas las plantas (todas)"
+    user_id: "auditor.ambiental@test"
+    contrasena_test: "test-illari-2026"
+
+  - id: tecnico_medioambiente
+    descripcion: "Técnico medioambiente — acceso a todas las plantas (ambito distinto, no aplica en oro_p00002)"
+    user_id: "tecnico.medioambiente@test"
+    contrasena_test: "test-illari-2026"
+
+escenarios:
+
+  # ── Autenticación ─────────────────────────────────────────────────────────
+
+  - id: sin_jwt
+    reporte: concentracion_anual
+    parametros: {}
+    espera:
+      status: 401
+
+  - id: jwt_invalido
+    reporte: concentracion_anual
+    token_literal: "esto_no_es_un_jwt"
+    parametros: {}
+    espera:
+      status: 401
+
+  # ── Listado de reportes ───────────────────────────────────────────────────
+  # GET /reportes/ lista los reportes disponibles.
+
+  - id: listar_reportes
+    operacion: listar
+    perfil: auditor_ambiental
+    espera:
+      status: 200
+      reportes_presentes:
+        - concentracion_anual
+
+  # ── Reporte inexistente ───────────────────────────────────────────────────
+
+  - id: reporte_inexistente
+    reporte: reporte_que_no_existe
+    perfil: auditor_ambiental
+    parametros: {}
+    espera:
+      status: 404
+
+  # ── Gobernanza: acceso completo ───────────────────────────────────────────
+  # auditor_ambiental tiene planta=[8 plantas] → ve los 16 filas (8 plantas × 2 años).
+
+  - id: auditor_todas_plantas
+    reporte: concentracion_anual
+    perfil: auditor_ambiental
+    parametros: {}
+    espera:
+      status: 200
+      filas_exactas: 16
+
+  # tecnico_medioambiente tiene planta=[8 plantas].
+  # Su ambito="medioambiente" no está en oro_p00002; dimensiones_requeridas=[planta]
+  # filtra el WHERE a solo planta → mismo resultado que auditor.
+
+  - id: tecnico_todas_plantas
+    reporte: concentracion_anual
+    perfil: tecnico_medioambiente
+    parametros: {}
+    espera:
+      status: 200
+      filas_exactas: 16
+
+  # ── Gobernanza: acceso restringido por planta ─────────────────────────────
+  # jefe_seguridad tiene planta=["Molienda SAG"] → 2 filas (2025 y 2026).
+
+  - id: jefe_solo_molienda_sag
+    reporte: concentracion_anual
+    perfil: jefe_seguridad
+    parametros: {}
+    espera:
+      status: 200
+      filas_exactas: 2
+      planta_unica: "Molienda SAG"
+
+  # operador_chancado tiene planta=["Pre-Chancado"] → 2 filas (2025 y 2026).
+
+  - id: operador_solo_pre_chancado
+    reporte: concentracion_anual
+    perfil: operador_chancado
+    parametros: {}
+    espera:
+      status: 200
+      filas_exactas: 2
+      planta_unica: "Pre-Chancado"
+
+  # ── Parámetro opcional anio ───────────────────────────────────────────────
+  # auditor + anio=2026 → 8 filas (una por planta, solo año 2026).
+
+  - id: auditor_filtro_anio_2026
+    reporte: concentracion_anual
+    perfil: auditor_ambiental
+    parametros:
+      anio: 2026
+    espera:
+      status: 200
+      filas_exactas: 8
+
+  # auditor + anio=2025 → 8 filas.
+
+  - id: auditor_filtro_anio_2025
+    reporte: concentracion_anual
+    perfil: auditor_ambiental
+    parametros:
+      anio: 2025
+    espera:
+      status: 200
+      filas_exactas: 8
+
+  # jefe + anio=2026 → 1 fila (solo Molienda SAG año 2026).
+
+  - id: jefe_filtro_anio_2026
+    reporte: concentracion_anual
+    perfil: jefe_seguridad
+    parametros:
+      anio: 2026
+    espera:
+      status: 200
+      filas_exactas: 1
+      planta_unica: "Molienda SAG"
+
+  # operador + anio=2025 → 1 fila.
+
+  - id: operador_filtro_anio_2025
+    reporte: concentracion_anual
+    perfil: operador_chancado
+    parametros:
+      anio: 2025
+    espera:
+      status: 200
+      filas_exactas: 1
+      planta_unica: "Pre-Chancado"

@@ -1,0 +1,16 @@
+version: "1.0"
+reporte_id: concentracion_anual
+titulo: Concentración anual de polvo respirable por planta
+descripcion: >
+  Estadísticas anuales de concentración de polvo respirable (DS 594) por planta.
+  Fuente: modelo dbt oro_p00002.
+  Gobernanza: filtra por planta (enum). Ver dimensiones_requeridas.
+formato: json
+parametros:
+  - nombre: anio
+    tipo: entero
+    requerido: false
+gobernanza:
+  modelo_oro: oro_p00002
+  dimensiones_requeridas:
+    - planta
