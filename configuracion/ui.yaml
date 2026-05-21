@@ -14,3 +14,24 @@ asistente_activo:
 branding:
   archivo: configuracion/ui/branding.json
   css_personalizado: null
+
+arbol_contextos:
+  niveles:
+    - dimension: ambito
+      etiqueta: "Ámbito"
+      valores:
+        seguridad_ocupacional: "Seguridad Ocupacional"
+        medioambiente: "Medioambiente"
+    - dimension: planta
+      etiqueta: "Planta"
+      valores:
+        chancado: "Chancado"
+        molienda: "Molienda"
+        "Nodo 3500": "Nodo 3500"
+        "Pre-Chancado": "Pre-Chancado"
+        "Chancado 2° y 3°": "Chancado 2° y 3°"
+        "Chancado Fino 3°": "Chancado Fino 3°"
+        "Chancado Fino 4°": "Chancado Fino 4°"
+        "Molienda SAG": "Molienda SAG"
+        "Molienda Convencional": "Molienda Convencional"
+        CDM: "CDM"

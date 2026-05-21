@@ -66,6 +66,17 @@ dimensiones_de_gobernanza:
       - Molienda Convencional
       - CDM
       - Nodo 3500
+    grupos:
+      chancado:
+        - Nodo 3500
+        - Pre-Chancado
+        - "Chancado 2° y 3°"
+        - "Chancado Fino 3°"
+        - "Chancado Fino 4°"
+      molienda:
+        - Molienda SAG
+        - Molienda Convencional
+        - CDM
 
   ambito:
     tipo: enum
