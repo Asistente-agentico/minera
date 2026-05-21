@@ -1,0 +1,7 @@
+version: "1.0"
+modo: interno
+jwt_interno:
+  ttl_minutos: 60
+permisos:
+  recarga_automatica: true
+  intervalo_polling_segundos: 30

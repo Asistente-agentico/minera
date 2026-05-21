@@ -1,23 +1,20 @@
 #!/usr/bin/env bash
-# run_e2e_escritura.sh — Ejecuta el pipeline M1 en Docker y valida la salida.
+# run_e2e_escritura.sh — Pipeline completo M1→MV→BDV y valida la salida.
 #
 # Fases:
-#   1. docker pull (antes de cualquier cambio destructivo).
-#   2. Borrar qdrant_data/ y ejecutar M1 CLI (dbt → chunker → chunks_generados_dev.json).
-#      MV no se inicia en esta suite (valida solo el pipeline M1).
-#      M1 escribe chunks_generados_dev.json (--dev) antes del intento a MV y
-#      continúa con degradación silenciosa si MV no responde.
-#   3. Local: pytest valida chunks_generados_dev.json contra e2e_escritura.yaml.
+#   1. Local: preparar_landing.py → CSVs en datos/csv/ desde el xlsx de mediciones.
+#   2. docker compose pull (antes de cualquier cambio destructivo).
+#   3. Limpiar datos/qdrant_mv/ y levantar MK + MV + M1 via docker compose.
+#      M1: cargar_landing.py → dbt seed → dbt snapshot → dbt run → orquestador.
+#   4. Local: pytest valida chunks_generados_dev.json contra e2e_escritura.yaml.
 #
 # Uso:
 #   bash scripts/run_e2e_escritura.sh
 #   bash scripts/run_e2e_escritura.sh tests/e2e_escritura.yaml
 #
 # Variables de entorno:
-#   ILLARI_TAG  — tag de la imagen Docker (default: dev-0.7.1)
-#
-# Nota: MASTER_SECRET no es necesario para este script. El orquestador M1
-# envía chunks en texto plano a MV; el cifrado lo hace MV (no M1).
+#   MASTER_SECRET  — secreto de cifrado (obligatorio)
+#   ILLARI_TAG     — tag de imagen Docker (default: dev-0.7.2)
 
 set -euo pipefail
 
@@ -25,7 +22,8 @@ set -euo pipefail
 # Configuración
 # ---------------------------------------------------------------------------
 IMAGEN_BASE="ghcr.io/asistente-agentico/illari"
-IMAGEN="${IMAGEN_BASE}:${ILLARI_TAG:-dev-0.7.1}"
+IMAGEN="${IMAGEN_BASE}:${ILLARI_TAG:-dev-0.7.2}"
+COMPOSE_FILE="docker-compose.escritura.yml"
 
 REPO_RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
 SUITE_REL="tests/e2e_escritura.yaml"
@@ -40,16 +38,32 @@ done
 SUITE_ABS="${REPO_RAIZ}/${SUITE_REL}"
 
 # ---------------------------------------------------------------------------
-# Validar suite y dependencias
+# Leer MASTER_SECRET (env > .env > error)
+# ---------------------------------------------------------------------------
+if [[ -z "${MASTER_SECRET:-}" ]]; then
+    ENV_FILE="${REPO_RAIZ}/.env"
+    if [[ -f "$ENV_FILE" ]]; then
+        MASTER_SECRET=$(grep -E '^\s*(export\s+)?MASTER_SECRET\s*=' "$ENV_FILE" \
+            | head -1 | sed -E 's/^\s*(export\s+)?MASTER_SECRET\s*=\s*//' | tr -d '"'"'" | xargs)
+    fi
+fi
+
+if [[ -z "${MASTER_SECRET:-}" ]]; then
+    echo "Error: MASTER_SECRET no definido." >&2
+    echo "Pásalo como variable de entorno o agrégalo al archivo .env del repo." >&2
+    exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# Validar suite, dependencias y compose
 # ---------------------------------------------------------------------------
 if [[ ! -f "$SUITE_ABS" ]]; then
     echo "Error: suite no encontrada: $SUITE_ABS" >&2
     exit 1
 fi
 
-if [[ ! -f "${REPO_RAIZ}/datos/minera.duckdb" ]]; then
-    echo "Error: datos/minera.duckdb no encontrado." >&2
-    echo "Ejecuta 'dbt seed' y 'dbt run' en modelos/ antes de correr esta suite." >&2
+if [[ ! -f "${REPO_RAIZ}/${COMPOSE_FILE}" ]]; then
+    echo "Error: ${COMPOSE_FILE} no encontrado en ${REPO_RAIZ}" >&2
     exit 1
 fi
 
@@ -78,57 +92,66 @@ echo "Output : ${OUT_FILE}"
 echo ""
 
 # ---------------------------------------------------------------------------
-# Fase 1 — Descargar imagen (antes de cualquier cambio destructivo)
+# Fase 0 — Preparar CSVs de landing desde el xlsx de mediciones
 # ---------------------------------------------------------------------------
-echo "[1/3] Descargando imagen Docker..."
-docker pull "${IMAGEN}"
+echo "[1/4] Preparando CSVs de landing..."
+python3 "${REPO_RAIZ}/scripts/preparar_landing.py" --raiz "${REPO_RAIZ}"
 echo ""
 
 # ---------------------------------------------------------------------------
-# Fase 2 — Borrar qdrant_data/ y ejecutar pipeline M1
+# Fase 1 — Descargar imagen (omite pull si ya existe localmente)
 # ---------------------------------------------------------------------------
-echo "[2/3] Ejecutando pipeline M1 en Docker..."
-echo "  Imagen: ${IMAGEN}"
-echo "  (MV no iniciado — esta suite valida solo el pipeline M1)"
+if docker image inspect "${IMAGEN}" &>/dev/null; then
+    echo "[2/4] Imagen ${IMAGEN} encontrada localmente — omitiendo pull."
+else
+    echo "[2/4] Descargando imagen Docker..."
+    ILLARI_TAG="${ILLARI_TAG:-dev-0.7.2}" \
+    MASTER_SECRET="${MASTER_SECRET}" \
+    docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" pull
+fi
 echo ""
 
-QDRANT_DIR="${REPO_RAIZ}/qdrant_data"
-echo "  Limpiando qdrant_data/..."
+# ---------------------------------------------------------------------------
+# Fase 2 — Limpiar BDV y ejecutar pipeline MK + MV + M1
+# ---------------------------------------------------------------------------
+echo "[3/4] Ejecutando pipeline MK → MV → M1 via docker compose..."
+echo ""
+
+QDRANT_DIR="${REPO_RAIZ}/datos/qdrant_mv"
+echo "  Limpiando ${QDRANT_DIR}..."
 if [[ -d "$QDRANT_DIR" ]]; then
     rm -rf "$QDRANT_DIR"
     echo "  Eliminado: ${QDRANT_DIR}"
 else
-    echo "  qdrant_data/ no existe, nada que limpiar."
+    echo "  datos/qdrant_mv/ no existe, nada que limpiar."
 fi
+
+echo "  Pre-creando colección Qdrant (el contenedor MV escribe, no crea)..."
+python3 "${REPO_RAIZ}/scripts/preparar_bdv.py" --raiz "${REPO_RAIZ}"
 echo ""
 
-PIPELINE_CMD='
-pip install fastembed -q 2>/dev/null
-export MINERA_DB_PATH=/cliente/minera/datos/minera.duckdb
-python -m m1.core.orquestador.cli ejecutar \
-    --dev \
-    --config /cliente/minera/configuracion \
-    --schemas /app/configuracion/schemas \
-    --medallon /cliente/minera/modelos \
-    --profiles-dir /cliente/minera/modelos \
-    --raiz /cliente/minera
-'
+# Garantizar estado limpio: si hay contenedores previos (config stale), bajarlos.
+ILLARI_TAG="${ILLARI_TAG:-dev-0.7.2}" \
+MASTER_SECRET="${MASTER_SECRET}" \
+docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" down --remove-orphans 2>/dev/null || true
 
-
-docker run --rm \
-    -v "${REPO_RAIZ}:/cliente/minera" \
-    -e "MINERA_DB_PATH=/cliente/minera/datos/minera.duckdb" \
-    --entrypoint sh \
-    "${IMAGEN}" \
-    -c "${PIPELINE_CMD}" \
+ILLARI_TAG="${ILLARI_TAG:-dev-0.7.2}" \
+MASTER_SECRET="${MASTER_SECRET}" \
+docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" \
+    up --abort-on-container-exit --exit-code-from m1 \
     | tee -a "${OUT_FILE}"
 
-DOCKER_EXIT="${PIPESTATUS[0]}"
+COMPOSE_EXIT="${PIPESTATUS[0]}"
 
-if [[ $DOCKER_EXIT -ne 0 ]]; then
+# Limpiar red y contenedores detenidos
+ILLARI_TAG="${ILLARI_TAG:-dev-0.7.2}" \
+MASTER_SECRET="${MASTER_SECRET}" \
+docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" down --remove-orphans 2>/dev/null || true
+
+if [[ $COMPOSE_EXIT -ne 0 ]]; then
     echo ""
-    echo "FAILED pipeline Docker (exit ${DOCKER_EXIT}) — ver: ${OUT_FILE}"
-    exit "$DOCKER_EXIT"
+    echo "FAILED pipeline docker compose (exit ${COMPOSE_EXIT}) — ver: ${OUT_FILE}"
+    exit "$COMPOSE_EXIT"
 fi
 
 if [[ ! -f "${REPO_RAIZ}/datos/chunks_generados_dev.json" ]]; then
@@ -137,14 +160,20 @@ if [[ ! -f "${REPO_RAIZ}/datos/chunks_generados_dev.json" ]]; then
     exit 1
 fi
 
+if [[ ! -d "${REPO_RAIZ}/datos/qdrant_mv" ]] || [[ -z "$(ls -A "${REPO_RAIZ}/datos/qdrant_mv" 2>/dev/null)" ]]; then
+    echo ""
+    echo "FAILED: datos/qdrant_mv/ vacío o inexistente — MV no indexó los chunks." >&2
+    exit 1
+fi
+
 echo ""
-echo "  Pipeline completado. chunks_generados_dev.json generado."
+echo "  Pipeline completado. chunks_generados_dev.json generado y chunks en BDV."
 echo ""
 
 # ---------------------------------------------------------------------------
 # Fase 3 — Validación local con pytest
 # ---------------------------------------------------------------------------
-echo "[3/3] Validando chunks_generados_dev.json con pytest..."
+echo "[4/4] Validando chunks con pytest (JSON + BDV)..."
 echo ""
 
 ILLARI_E2E_ESCRITURA="${SUITE_ABS}" \

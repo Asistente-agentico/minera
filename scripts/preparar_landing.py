@@ -88,7 +88,13 @@ def main() -> None:
     xlsx_candidatos = list(datos_dir.glob("*.xlsx"))
     if not xlsx_candidatos:
         raise FileNotFoundError(f"No se encontró ningún .xlsx en {datos_dir}")
-    xlsx_path = xlsx_candidatos[0]
+    # Preferir el xlsx que contenga al menos una hoja de mediciones.
+    hojas_esperadas = set(HOJAS.keys())
+    xlsx_path = next(
+        (p for p in xlsx_candidatos
+         if hojas_esperadas & set(load_workbook(p, read_only=True).sheetnames)),
+        xlsx_candidatos[0],
+    )
     print(f"Leyendo: {xlsx_path}")
 
     wb = load_workbook(xlsx_path, data_only=True)

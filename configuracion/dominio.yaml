@@ -46,7 +46,7 @@ embeddings:
   dimensiones: 384
   batch_size: 64
   vector_store:
-    url: ./qdrant_data
+    url: ./datos/qdrant_mv
     collection: chunks
 
 hashing:

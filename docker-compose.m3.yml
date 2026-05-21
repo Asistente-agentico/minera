@@ -1,0 +1,71 @@
+# docker-compose.m3.yml — Suite E2E reportes M3
+#
+# Levanta MA + M3.
+# MA (8001) y M3 (8004) se exponen al host para que pytest corra localmente.
+#
+# Prerrequisito: datos/minera.duckdb presente (dbt seed && dbt run).
+# No requiere MASTER_SECRET (M3 no usa MV ni Qdrant).
+#
+# Uso (desde la raíz del repo minera):
+#   docker compose -f docker-compose.m3.yml up -d
+#   # esperar a M3 healthy, luego ejecutar pytest
+#   docker compose -f docker-compose.m3.yml down --remove-orphans
+#
+# Variables de entorno:
+#   ILLARI_TAG  — tag de imagen (default: dev-0.7.2)
+
+x-base: &base
+  image: ghcr.io/asistente-agentico/illari:${ILLARI_TAG:-dev-0.7.2}
+  volumes:
+    - .:/cliente/minera
+  networks: [red_illari]
+
+services:
+
+  ma:
+    <<: *base
+    entrypoint: uvicorn ma.api.main:app --host 0.0.0.0 --port 8001
+    environment:
+      CLIENTE_DIR: /cliente/minera
+      # Hashes bcrypt (cost=4) de la contraseña de prueba 'test-illari-2026'.
+      # Los $$ son el escape de $ en docker compose (resultado: $2b$04$...).
+      MA_USER_HASH_amVmZS5zZWd1cmlkYWRAdGVzdA: "$$2b$$04$$S5S3tejM5JDZjzSbSPIIr.JAMtP4oMpKgT/UzzWSw3/qCS.joIaJq"
+      MA_USER_HASH_b3BlcmFkb3IuY2hhbmNhZG9AdGVzdA: "$$2b$$04$$S5S3tejM5JDZjzSbSPIIr.JAMtP4oMpKgT/UzzWSw3/qCS.joIaJq"
+      MA_USER_HASH_YXVkaXRvci5hbWJpZW50YWxAdGVzdA: "$$2b$$04$$S5S3tejM5JDZjzSbSPIIr.JAMtP4oMpKgT/UzzWSw3/qCS.joIaJq"
+      MA_USER_HASH_dGVjbmljby5tZWRpb2FtYmllbnRlQHRlc3Q: "$$2b$$04$$S5S3tejM5JDZjzSbSPIIr.JAMtP4oMpKgT/UzzWSw3/qCS.joIaJq"
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  m3:
+    <<: *base
+    entrypoint:
+      - sh
+      - -c
+      - >-
+        python -m m3.core.cli serve --dev --raiz /cliente/minera --host 0.0.0.0 --port 8004
+    depends_on:
+      ma:
+        condition: service_healthy
+    environment:
+      CLIENTE_DIR: /cliente/minera
+      MA_JWKS_URL: "http://ma:8001/jwks"
+    ports:
+      - "8004:8004"
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8004/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+      start_period: 15s
+
+networks:
+  red_illari:
+    driver: bridge

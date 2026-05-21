@@ -1,20 +1,15 @@
 #!/usr/bin/env bash
-# run_e2e_m3.sh — Ejecuta la suite E2E de reportes M3 (concentracion_anual).
+# run_e2e_m3.sh — Levanta MA+M3 via docker compose y valida reportes con pytest local.
 #
-# Equivalente bash de run_e2e_m3.ps1 (para entornos Linux/macOS).
-# La imagen monolítica contiene M3 y MA — docker pull los descarga todos.
+# Prerrequisito: datos/minera.duckdb presente (dbt seed && dbt run).
+# No requiere MASTER_SECRET (M3 no usa MV ni Qdrant).
 #
 # Uso:
-#   bash scripts/run_e2e_m3.sh                                     # modo normal
-#   bash scripts/run_e2e_m3.sh --dev                               # verbose
-#   bash scripts/run_e2e_m3.sh tests/e2e_m3_reportes.yaml          # suite explícita
-#   bash scripts/run_e2e_m3.sh tests/e2e_m3_reportes.yaml --dev    # suite + verbose
+#   bash scripts/run_e2e_m3.sh
+#   bash scripts/run_e2e_m3.sh tests/e2e_m3_reportes.yaml
 #
 # Variables de entorno:
-#   ILLARI_TAG  — tag de la imagen Docker (default: dev-0.7.1)
-#
-# No requiere MASTER_SECRET (M3 no usa MV ni Qdrant).
-# Prerequisito: datos/minera.duckdb presente (dbt seed && dbt run).
+#   ILLARI_TAG  — tag de imagen Docker (default: dev-0.7.2)
 
 set -euo pipefail
 
@@ -22,27 +17,23 @@ set -euo pipefail
 # Configuración
 # ---------------------------------------------------------------------------
 IMAGEN_BASE="ghcr.io/asistente-agentico/illari"
-IMAGEN="${IMAGEN_BASE}:${ILLARI_TAG:-dev-0.7.1}"
+IMAGEN="${IMAGEN_BASE}:${ILLARI_TAG:-dev-0.7.2}"
+COMPOSE_FILE="docker-compose.m3.yml"
 
 REPO_RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
 SUITE_REL="tests/e2e_m3_reportes.yaml"
-DEV=0
 
-# ---------------------------------------------------------------------------
-# Parsear argumentos
-# ---------------------------------------------------------------------------
 for arg in "$@"; do
     case "$arg" in
-        --dev|-d)   DEV=1 ;;
         *.yaml|*.yml) SUITE_REL="$arg" ;;
-        *) echo "Argumento desconocido: $arg" >&2; exit 1 ;;
+        *) ;;
     esac
 done
 
 SUITE_ABS="${REPO_RAIZ}/${SUITE_REL}"
 
 # ---------------------------------------------------------------------------
-# Validar suite y dependencias
+# Validar prerequisitos
 # ---------------------------------------------------------------------------
 if [[ ! -f "$SUITE_ABS" ]]; then
     echo "Error: suite no encontrada: $SUITE_ABS" >&2
@@ -55,88 +46,116 @@ if [[ ! -f "${REPO_RAIZ}/datos/minera.duckdb" ]]; then
     exit 1
 fi
 
-# ---------------------------------------------------------------------------
-# Extraer nombre y versión del YAML de suite
-# ---------------------------------------------------------------------------
-SUITE_NAME="$(basename "$SUITE_REL" .yaml)"
-SUITE_VERSION=$(python3 -c "
-try:
-    import yaml
-    d = yaml.safe_load(open('${SUITE_ABS}'))
-    print(d.get('version', 'sin-version'))
-except Exception:
-    print('sin-version')
-" 2>/dev/null || echo "sin-version")
+if [[ ! -f "${REPO_RAIZ}/${COMPOSE_FILE}" ]]; then
+    echo "Error: ${COMPOSE_FILE} no encontrado en ${REPO_RAIZ}" >&2
+    exit 1
+fi
 
-# ---------------------------------------------------------------------------
-# Nombre del archivo de resultado
-# ---------------------------------------------------------------------------
-TS=$(date +%Y%m%d-%H%M%S)
-DEV_SUFIJO=""
-[[ $DEV -eq 1 ]] && DEV_SUFIJO="-dev"
-OUT_DIR="${REPO_RAIZ}/tests/results"
-OUT_FILE="${OUT_DIR}/${SUITE_NAME}-v${SUITE_VERSION}${DEV_SUFIJO}-${TS}.txt"
-mkdir -p "$OUT_DIR"
+ILLARI_TESTS="$(dirname "$REPO_RAIZ")/Illari/tests"
+TEST_DIR="${ILLARI_TESTS}/e2e_m3"
+if [[ ! -d "$TEST_DIR" ]]; then
+    echo "Error: tests/e2e_m3/ no encontrado en ${TEST_DIR}" >&2
+    echo "Verifica que el repo Illari esté en $(dirname "$REPO_RAIZ")/Illari" >&2
+    exit 1
+fi
 
 # ---------------------------------------------------------------------------
 # Info
 # ---------------------------------------------------------------------------
-MODO=$( [[ $DEV -eq 1 ]] && echo "dev (verbose)" || echo "normal" )
+TS=$(date +%Y%m%d-%H%M%S)
+OUT_DIR="${REPO_RAIZ}/tests/results"
+OUT_FILE="${OUT_DIR}/e2e_m3-${TS}.txt"
+mkdir -p "$OUT_DIR"
+
 echo ""
 echo "=== Illari E2E M3 (reportes) — minera ==="
-echo "Suite  : ${SUITE_NAME} v${SUITE_VERSION}"
-echo "Modo   : ${MODO}"
+echo "Suite  : ${SUITE_ABS}"
 echo "Imagen : ${IMAGEN}"
 echo "Output : ${OUT_FILE}"
 echo ""
 
 # ---------------------------------------------------------------------------
-# 1. Descargar imagen
+# Fase 1 — Descargar imagen (omite pull si ya existe localmente)
 # ---------------------------------------------------------------------------
-echo "[1/2] docker pull ${IMAGEN}"
-docker pull "${IMAGEN}"
-echo ""
-
-# ---------------------------------------------------------------------------
-# 2. Ejecutar suite E2E M3
-# ---------------------------------------------------------------------------
-echo "[2/2] Ejecutando suite E2E M3…"
-
-PYTEST_FLAGS="-v -m e2e"
-[[ $DEV -eq 1 ]] && PYTEST_FLAGS="-v -s -m e2e"
-VERBOSE_VAL=$( [[ $DEV -eq 1 ]] && echo "1" || echo "0" )
-
-CMD="python -m pytest /app/tests/e2e_m3/ ${PYTEST_FLAGS}"
-
-EXTRA_MOUNTS=()
-if [[ $DEV -eq 1 ]]; then
-    ILLARI_TESTS="$(dirname "$REPO_RAIZ")/Illari/tests"
-    if [[ -d "$ILLARI_TESTS" ]]; then
-        EXTRA_MOUNTS=(-v "${ILLARI_TESTS}:/app/tests")
-        echo "Tests  : ${ILLARI_TESTS} (montado en /app/tests)"
-    else
-        echo "Tests  : usando tests embebidos en la imagen (${ILLARI_TESTS} no encontrado)"
-    fi
+if docker image inspect "${IMAGEN}" &>/dev/null; then
+    echo "[1/3] Imagen ${IMAGEN} encontrada localmente — omitiendo pull."
+else
+    echo "[1/3] Descargando imagen Docker..."
+    ILLARI_TAG="${ILLARI_TAG:-dev-0.7.2}" \
+    docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" pull
 fi
+echo ""
 
-docker run --rm \
-    -v "${REPO_RAIZ}:/cliente/minera" \
-    "${EXTRA_MOUNTS[@]+"${EXTRA_MOUNTS[@]}"}" \
-    -e "ILLARI_E2E_M3=/cliente/minera/${SUITE_REL}" \
-    -e "ILLARI_E2E_CLIENTE=/cliente/minera" \
-    -e "ILLARI_E2E_VERBOSE=${VERBOSE_VAL}" \
-    --entrypoint sh \
-    "${IMAGEN}" \
-    -c "${CMD}" \
-    | tee "${OUT_FILE}"
+# ---------------------------------------------------------------------------
+# Fase 2 — Levantar servicios en background
+# ---------------------------------------------------------------------------
+echo "[2/3] Levantando servicios MA + M3..."
+echo ""
 
-EXIT_CODE="${PIPESTATUS[0]}"
+ILLARI_TAG="${ILLARI_TAG:-dev-0.7.2}" \
+docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" down --remove-orphans 2>/dev/null || true
+
+ILLARI_TAG="${ILLARI_TAG:-dev-0.7.2}" \
+docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" up -d \
+    | tee -a "${OUT_FILE}"
+
+# Esperar M3 healthy (máximo 90 segundos)
+echo ""
+echo "  Esperando M3 en http://localhost:8004/health..."
+M3_OK=0
+for i in $(seq 1 18); do
+    if python3 -c "
+import urllib.request, sys
+try:
+    r = urllib.request.urlopen('http://localhost:8004/health', timeout=3)
+    sys.exit(0 if r.status == 200 else 1)
+except Exception:
+    sys.exit(1)
+" 2>/dev/null; then
+        echo "  M3 listo (intento ${i}/18)"
+        M3_OK=1
+        break
+    fi
+    echo "  Intento ${i}/18 — esperando 5s..."
+    sleep 5
+done
+
+if [[ $M3_OK -eq 0 ]]; then
+    echo ""
+    echo "FAILED: M3 no respondió healthy en 90s." >&2
+    echo "--- Logs de servicios ---" >&2
+    ILLARI_TAG="${ILLARI_TAG:-dev-0.7.2}" \
+    docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" logs --tail=30 >&2 || true
+    ILLARI_TAG="${ILLARI_TAG:-dev-0.7.2}" \
+    docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" down --remove-orphans 2>/dev/null || true
+    exit 1
+fi
+echo ""
+
+# ---------------------------------------------------------------------------
+# Fase 3 — Validación con pytest local
+# ---------------------------------------------------------------------------
+echo "[3/3] Ejecutando pytest E2E M3..."
+echo ""
+
+ILLARI_E2E_M3="${SUITE_ABS}" \
+ILLARI_E2E_CLIENTE="${REPO_RAIZ}" \
+ILLARI_E2E_M3_URL="http://localhost:8004" \
+ILLARI_E2E_MA_URL="http://localhost:8001" \
+python3 -m pytest "${TEST_DIR}" -v -m e2e \
+    --rootdir="${ILLARI_TESTS}/.." \
+    | tee -a "${OUT_FILE}"
+
+PYTEST_EXIT="${PIPESTATUS[0]}"
+
+ILLARI_TAG="${ILLARI_TAG:-dev-0.7.2}" \
+docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" down --remove-orphans 2>/dev/null || true
 
 echo ""
-if [[ $EXIT_CODE -eq 0 ]]; then
+if [[ $PYTEST_EXIT -eq 0 ]]; then
     echo "PASSED — resultado guardado en: ${OUT_FILE}"
 else
-    echo "FAILED (exit ${EXIT_CODE}) — resultado guardado en: ${OUT_FILE}"
+    echo "FAILED (exit ${PYTEST_EXIT}) — resultado guardado en: ${OUT_FILE}"
 fi
 
-exit "$EXIT_CODE"
+exit "$PYTEST_EXIT"

@@ -1,0 +1,101 @@
+# docker-compose.escritura.yml — Suite E2E escritura completa
+#
+# Levanta MK → MV (BDV embebida) y corre M1 como job único.
+# Los chunks quedan indexados en datos/qdrant_mv/ (Qdrant embebido de MV).
+#
+# Uso (desde la raíz del repo minera):
+#   MASTER_SECRET=xxx docker compose -f docker-compose.escritura.yml up \
+#       --abort-on-container-exit --exit-code-from m1
+#
+# Variables de entorno:
+#   MASTER_SECRET  — secreto de cifrado (obligatorio)
+#   ILLARI_TAG     — tag de imagen (default: dev-0.7.2)
+
+x-base: &base
+  image: ghcr.io/asistente-agentico/illari:${ILLARI_TAG:-dev-0.7.2}
+  volumes:
+    - .:/cliente/minera
+  networks: [red_illari]
+
+services:
+
+  mk:
+    <<: *base
+    entrypoint: python -m mk.api.main
+    environment:
+      MASTER_SECRET: ${MASTER_SECRET}
+      MK_PORT: "8003"
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8003/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  mv-api:
+    <<: *base
+    entrypoint:
+      - sh
+      - -c
+      - >-
+        pip install fastembed -q 2>/dev/null &&
+        uvicorn mv.api.main:app --host 0.0.0.0 --port 8002
+    volumes:
+      - .:/cliente/minera
+      - fastembed_modelo:/home/asistente/.cache/fastembed
+    depends_on:
+      mk:
+        condition: service_healthy
+    environment:
+      MK_URL: "http://mk:8003"
+      CLIENTE_DIR: /cliente/minera
+      MV_PORT: "8002"
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8002/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+
+  m1:
+    <<: *base
+    entrypoint:
+      - sh
+      - -c
+      - >-
+        python3 /cliente/minera/scripts/cargar_landing.py
+        --raiz /cliente/minera &&
+        pip install fastembed -q 2>/dev/null &&
+        dbt seed
+        --project-dir /cliente/minera/modelos
+        --profiles-dir /cliente/minera/modelos &&
+        dbt snapshot
+        --project-dir /cliente/minera/modelos
+        --profiles-dir /cliente/minera/modelos &&
+        dbt run
+        --project-dir /cliente/minera/modelos
+        --profiles-dir /cliente/minera/modelos &&
+        python -m m1.core.orquestador.cli ejecutar
+        --dev
+        --config /cliente/minera/configuracion
+        --schemas /app/configuracion/schemas
+        --medallon /cliente/minera/modelos
+        --profiles-dir /cliente/minera/modelos
+        --raiz /cliente/minera
+    depends_on:
+      mv-api:
+        condition: service_healthy
+    environment:
+      MINERA_DB_PATH: /cliente/minera/datos/minera.duckdb
+      MV_URL: "http://mv-api:8002"
+      CLIENTE_DIR: /cliente/minera
+    restart: "no"
+
+networks:
+  red_illari:
+    driver: bridge
+
+volumes:
+  fastembed_modelo:
