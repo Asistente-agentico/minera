@@ -4,7 +4,7 @@ Configuración del Asistente Virtual para el caso **Minera**: monitoreo de conce
 de polvo respirable en puntos de medición de faena. Responde 4 preguntas de negocio
 sobre mediciones ambientales bajo DS 594.
 
-Compatible con: `asistente-agentico/illari v0.7.1+`
+Compatible con: `asistente-agentico/illari v0.7.3+`
 
 > **Este repositorio es del equipo de servicio.** El cliente nunca lo ve.
 > La configuración y los modelos de transformación viajan dentro de la imagen Docker.
@@ -55,7 +55,7 @@ docker-compose.m3.yml         — orquesta MA + M3 para el E2E de reportes
 tests/
   e2e_lectura.yaml       — suite E2E lectura (M2): 4 perfiles, 11 escenarios
   e2e_escritura.yaml     — suite E2E escritura (M1): conteo, gobernanza, PII, cifrado
-  e2e_m3_reportes.yaml   — suite E2E reportes (M3): 4 perfiles, 13 escenarios
+  e2e_m3_reportes.yaml   — suite E2E reportes (M3): 4 perfiles, 12 escenarios
 
 datos/                 — gitignoreado (PII + datos del cliente; solo en ambiente local)
   qdrant_mv/           — BDV Qdrant embebida generada por el E2E escritura
@@ -170,9 +170,13 @@ bash scripts/run_e2e_m3.sh
 .\scripts\run_e2e_m3.ps1
 ```
 
-13 escenarios: 2 de autenticación, 1 de listado, 1 de reporte inexistente,
-4 de gobernanza por planta (acceso completo y restringido), 4 de parámetro `anio`,
-1 de filtro combinado planta+año.
+12 escenarios: 2 de autenticación, 1 de listado, 1 de reporte inexistente,
+4 de gobernanza por planta (2 con acceso completo, 2 con planta restringida),
+4 de parámetro `anio` (incluyendo filtro combinado planta+año para jefe y operador).
+
+> **Nota:** `M00002` debe estar materializado como TABLE en DuckDB para que los
+> filtros por `anio` funcionen. Con `dbt run` (o `dbt run --select M00002`) esto
+> queda configurado automáticamente.
 
 Los resultados se guardan en `tests/results/` (gitignoreado).
 
