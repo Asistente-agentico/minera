@@ -67,7 +67,7 @@ New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 New-Item -ItemType File -Force -Path $outFile | Out-Null
 
 Write-Host ""
-Write-Host "=== Illari E2E M3 (reportes) — minera ==="
+Write-Host "=== Illari E2E M3 (reportes) -- minera ==="
 Write-Host "Suite  : $suiteAbs"
 Write-Host "Imagen : ghcr.io/asistente-agentico/illari:$illariTag"
 Write-Host "Output : $outFile"
