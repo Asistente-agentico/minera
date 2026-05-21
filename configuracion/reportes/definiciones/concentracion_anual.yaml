@@ -11,6 +11,6 @@ parametros:
     tipo: entero
     requerido: false
 gobernanza:
-  modelo_oro: oro_p00002
+  modelo_oro: M00002
   dimensiones_requeridas:
     - planta

@@ -6,6 +6,7 @@
 -#}
 {{
     config(
+        materialized='table',
         tags=['capa:oro', 'dominio:minera_prueba', 'regla:P00002']
     )
 }}

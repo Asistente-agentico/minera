@@ -75,17 +75,23 @@ Write-Host ""
 
 $env:ILLARI_TAG = $illariTag
 
-# -- Fase 1: docker compose pull --------------------------------------------
-Write-Host "[1/3] Descargando imagen Docker..."
-docker compose -f $composeAbs pull
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+# -- Fase 1: docker compose pull (omite si imagen ya existe localmente) ----
+$imagenCompleta = "ghcr.io/asistente-agentico/illari:$illariTag"
+$imageExists = docker image inspect $imagenCompleta 2>$null
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "[1/3] Imagen $imagenCompleta encontrada localmente -- omitiendo pull."
+} else {
+    Write-Host "[1/3] Descargando imagen Docker..."
+    docker compose -f $composeAbs pull
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
 Write-Host ""
 
 # -- Fase 2: levantar servicios en background -------------------------------
 Write-Host "[2/3] Levantando servicios MA + M3..."
 Write-Host ""
 
-docker compose -f $composeAbs down --remove-orphans 2>$null | Out-Null
+try { docker compose -f $composeAbs down --remove-orphans 2>$null | Out-Null } catch { }
 
 docker compose -f $composeAbs up -d |
     Tee-Object -FilePath $outFile -Append
@@ -112,7 +118,7 @@ if (-not $m3Ok) {
     Write-Host "FAILED: M3 no respondio healthy en 90s." -ForegroundColor Red
     Write-Host "--- Logs de servicios ---"
     docker compose -f $composeAbs logs --tail=30 2>&1 | Write-Host
-    docker compose -f $composeAbs down --remove-orphans 2>$null | Out-Null
+    try { docker compose -f $composeAbs down --remove-orphans 2>$null | Out-Null } catch { }
     exit 1
 }
 Write-Host ""
@@ -131,7 +137,7 @@ python -m pytest (Join-Path $illariTests "e2e_m3") -v -m e2e `
     Tee-Object -FilePath $outFile -Append
 $pytestExit = $LASTEXITCODE
 
-docker compose -f $composeAbs down --remove-orphans 2>$null | Out-Null
+try { docker compose -f $composeAbs down --remove-orphans 2>$null | Out-Null } catch { }
 
 Write-Host ""
 if ($pytestExit -eq 0) {
