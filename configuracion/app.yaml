@@ -1,0 +1,15 @@
+version: "1.0"
+asistente_activo:
+  id: asistente_minera
+  nombre: "Asistente Minera"
+  subtitulo: "Seguridad Ocupacional y Medioambiente"
+  version: null
+modulos:
+  consultas:
+    habilitado: true
+    base_url: "http://localhost:8004"
+    endpoints: []
+  reportes:
+    habilitado: false
+    base_url: null
+    endpoints: []
