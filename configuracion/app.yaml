@@ -5,6 +5,10 @@ asistente_activo:
   subtitulo: "Seguridad Ocupacional y Medioambiente"
   version: null
 modulos:
+  central:
+    habilitado: true
+    base_url: "http://localhost:8001"
+    endpoints: []
   consultas:
     habilitado: true
     base_url: "http://localhost:8004"
