@@ -101,13 +101,13 @@ docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" up -d \
 
 # Esperar M3 healthy (máximo 90 segundos)
 echo ""
-echo "  Esperando M3 en http://localhost:8004/health..."
+echo "  Esperando M3 en http://localhost:8005/health..."
 M3_OK=0
 for i in $(seq 1 18); do
     if python3 -c "
 import urllib.request, sys
 try:
-    r = urllib.request.urlopen('http://localhost:8004/health', timeout=3)
+    r = urllib.request.urlopen('http://localhost:8005/health', timeout=3)
     sys.exit(0 if r.status == 200 else 1)
 except Exception:
     sys.exit(1)
@@ -140,7 +140,7 @@ echo ""
 
 ILLARI_E2E_M3="${SUITE_ABS}" \
 ILLARI_E2E_CLIENTE="${REPO_RAIZ}" \
-ILLARI_E2E_M3_URL="http://localhost:8004" \
+ILLARI_E2E_M3_URL="http://localhost:8005" \
 ILLARI_E2E_MA_URL="http://localhost:8001" \
 python3 -m pytest "${TEST_DIR}" -v -m e2e \
     --rootdir="${ILLARI_TESTS}/.." \

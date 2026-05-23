@@ -6,7 +6,7 @@
     Tres fases:
       1. docker compose pull.
       2. Levantar MA + M3 via docker compose (en background).
-         Espera hasta que M3 responda /health en localhost:8004.
+         Espera hasta que M3 responda /health en localhost:8005.
       3. Local: pytest valida reportes estructurados contra el servicio real.
 
     Prerrequisito: datos/minera.duckdb presente (dbt seed && dbt run).
@@ -98,11 +98,11 @@ docker compose -f $composeAbs up -d |
 
 # Esperar M3 healthy (máximo 90 segundos)
 Write-Host ""
-Write-Host "  Esperando M3 en http://localhost:8004/health..."
+Write-Host "  Esperando M3 en http://localhost:8005/health..."
 $m3Ok = $false
 for ($i = 1; $i -le 18; $i++) {
     try {
-        $r = Invoke-WebRequest -Uri "http://localhost:8004/health" -UseBasicParsing -TimeoutSec 3
+        $r = Invoke-WebRequest -Uri "http://localhost:8005/health" -UseBasicParsing -TimeoutSec 3
         if ($r.StatusCode -eq 200) {
             Write-Host "  M3 listo (intento $i/18)"
             $m3Ok = $true
@@ -129,7 +129,7 @@ Write-Host ""
 
 $env:ILLARI_E2E_M3      = $suiteAbs
 $env:ILLARI_E2E_CLIENTE = $repoRaiz
-$env:ILLARI_E2E_M3_URL  = "http://localhost:8004"
+$env:ILLARI_E2E_M3_URL  = "http://localhost:8005"
 $env:ILLARI_E2E_MA_URL  = "http://localhost:8001"
 
 python -m pytest (Join-Path $illariTests "e2e_m3") -v -m e2e `

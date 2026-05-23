@@ -1,7 +1,7 @@
 # docker-compose.m3.yml — Suite E2E reportes M3
 #
 # Levanta MA + M3.
-# MA (8001) y M3 (8004) se exponen al host para que pytest corra localmente.
+# MA (8001) y M3 (8005) se exponen al host para que pytest corra localmente.
 #
 # Prerrequisito: datos/minera.duckdb presente (dbt seed && dbt run).
 # No requiere MASTER_SECRET (M3 no usa MV ni Qdrant).
@@ -49,7 +49,7 @@ services:
       - sh
       - -c
       - >-
-        python -m m3.core.cli serve --dev --raiz /cliente/minera --host 0.0.0.0 --port 8004
+        python -m m3.core.cli serve --dev --raiz /cliente/minera --host 0.0.0.0 --port 8005
     depends_on:
       ma:
         condition: service_healthy
@@ -57,10 +57,10 @@ services:
       CLIENTE_DIR: /cliente/minera
       MA_JWKS_URL: "http://ma:8001/jwks"
     ports:
-      - "8004:8004"
+      - "8005:8005"
     healthcheck:
       test: ["CMD", "python", "-c",
-             "import urllib.request; urllib.request.urlopen('http://localhost:8004/health')"]
+             "import urllib.request; urllib.request.urlopen('http://localhost:8005/health')"]
       interval: 5s
       timeout: 3s
       retries: 15
