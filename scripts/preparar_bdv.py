@@ -1,9 +1,10 @@
 """Crea la colección Qdrant en datos/qdrant_mv/ si no existe.
 
-Lee dimensiones y nombre de colección desde configuracion/dominio.yaml y
-pre-crea la colección con Distance=COSINE antes de que el compose levante MV.
-Esto permite que el contenedor MV (imagen dev-0.7.x sin ensure_collection)
-encuentre la colección ya creada y pueda hacer upsert directamente.
+Lee dimensiones y nombre de colección desde configuracion/app.yaml
+(Stage MA-8-app: embeddings migró de dominio.yaml a app.yaml).
+Pre-crea la colección con Distance=COSINE antes de que el compose levante MV.
+Esto permite que el contenedor MV encuentre la colección ya creada y pueda
+hacer upsert directamente.
 
 Uso:
     python3 scripts/preparar_bdv.py --raiz /cliente/minera
@@ -24,9 +25,9 @@ def main() -> None:
     args = parser.parse_args()
     raiz = args.raiz.resolve()
 
-    dominio_path = raiz / "configuracion" / "dominio.yaml"
-    dominio = yaml.safe_load(dominio_path.read_text()) or {}
-    emb = dominio.get("embeddings") or {}
+    app_path = raiz / "configuracion" / "app.yaml"
+    app = yaml.safe_load(app_path.read_text()) or {}
+    emb = app.get("embeddings") or {}
     vs = emb.get("vector_store") or {}
 
     dim = int(emb.get("dimensiones", 1536))
