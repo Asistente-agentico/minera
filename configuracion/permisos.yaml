@@ -44,6 +44,10 @@ dimensiones:
     valores:
       - seguridad_ocupacional
       - medioambiente
+    grupos:
+      todos:
+        - seguridad_ocupacional
+        - medioambiente
 
   clasificacion:
     tipo: ordinal
@@ -81,7 +85,7 @@ usuarios:
     gobernanza:
       dimensiones:
         planta: ["chancado"]
-        ambito: ["seguridad_ocupacional"]
+        ambito: ["todos"]
         clasificacion: "interno"
 
   - user_id: "auditor.ambiental@test"
