@@ -55,7 +55,7 @@ docker-compose.informes-consumir.yml         — orquesta MA + M3 para el E2E de
 tests/
   e2e_consulta.yaml       — suite E2E consulta (M2): 4 perfiles, 11 escenarios
   e2e_ingesta.yaml     — suite E2E ingesta (M1): conteo, gobernanza, PII, cifrado
-  e2e_informes-consumir.yaml   — suite E2E reportes (M3): 4 perfiles, 12 escenarios
+  e2e_informes-consumir.yaml   — suite E2E reportes (M3): 4 perfiles, 22 escenarios
 
 datos/                 — gitignoreado (PII + datos del cliente; solo en ambiente local)
   qdrant_mv/           — BDV Qdrant embebida generada por el E2E ingesta
@@ -170,9 +170,11 @@ bash scripts/run_e2e_informes-consumir.sh
 .\scripts\run_e2e_informes-consumir.ps1
 ```
 
-12 escenarios: 2 de autenticación, 1 de listado, 1 de reporte inexistente,
-4 de gobernanza por planta (2 con acceso completo, 2 con planta restringida),
-4 de parámetro `anio` (incluyendo filtro combinado planta+año para jefe y operador).
+22 escenarios: 2 de autenticación (generar), 1 de listado, 1 de reporte inexistente,
+4 de gobernanza por planta vía `generar` (2 acceso completo, 2 planta restringida),
+4 de parámetro `anio` vía `generar`;
+2 de catálogo (`GET /catalogo`: shape + 401), 6 de consumir (`GET /{id}/consumir`:
+401, 404, gobernanza × 3, parámetro `anio`).
 
 > **Nota:** `M00002` debe estar materializado como TABLE en DuckDB para que los
 > filtros por `anio` funcionen. Con `dbt run` (o `dbt run --select M00002`) esto

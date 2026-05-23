@@ -168,3 +168,87 @@ escenarios:
     espera:
       status: 200
       filas_exactas: 3
+
+  # ── GET /reportes/catalogo ────────────────────────────────────────────────
+
+  - id: catalogo_sin_jwt
+    operacion: catalogo
+    espera:
+      status: 401
+
+  - id: catalogo_shape
+    operacion: catalogo
+    perfil: auditor_ambiental
+    espera:
+      status: 200
+      reportes_presentes:
+        - concentracion_anual
+      campos_item:
+        - id
+        - nombre
+        - formatos
+        - habilitado_para_usuario
+
+  # ── GET /reportes/{id}/consumir ───────────────────────────────────────────
+
+  - id: consumir_sin_jwt
+    operacion: consumir
+    reporte: concentracion_anual
+    parametros: {}
+    espera:
+      status: 401
+
+  - id: consumir_reporte_inexistente
+    operacion: consumir
+    reporte: reporte_que_no_existe
+    perfil: auditor_ambiental
+    parametros: {}
+    espera:
+      status: 404
+
+  # consumir espeja la gobernanza de generar: mismas filas, mismo filtrado.
+
+  - id: consumir_auditor_todas_plantas
+    operacion: consumir
+    reporte: concentracion_anual
+    perfil: auditor_ambiental
+    parametros: {}
+    espera:
+      status: 200
+      filas_exactas: 16
+      campos_fila:
+        - planta
+        - anio
+
+  - id: consumir_operador_grupo_chancado
+    operacion: consumir
+    reporte: concentracion_anual
+    perfil: operador_chancado
+    parametros: {}
+    espera:
+      status: 200
+      filas_exactas: 10
+
+  - id: consumir_tecnico_grupo_molienda
+    operacion: consumir
+    reporte: concentracion_anual
+    perfil: tecnico_molienda
+    parametros: {}
+    espera:
+      status: 200
+      filas_exactas: 6
+
+  # consumir + parámetro anio como query string (?anio=2026).
+
+  - id: consumir_filtro_anio_2026
+    operacion: consumir
+    reporte: concentracion_anual
+    perfil: auditor_ambiental
+    parametros:
+      anio: 2026
+    espera:
+      status: 200
+      filas_exactas: 8
+      campos_fila:
+        - planta
+        - anio
