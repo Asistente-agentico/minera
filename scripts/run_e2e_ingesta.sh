@@ -1,16 +1,16 @@
 ﻿#!/usr/bin/env bash
-# run_e2e_escritura.sh — Pipeline completo M1→MV→BDV y valida la salida.
+# run_e2e_ingesta.sh — Pipeline completo M1→MV→BDV y valida la salida.
 #
 # Fases:
 #   1. Local: preparar_landing.py → CSVs en datos/csv/ desde el xlsx de mediciones.
 #   2. docker compose pull (antes de cualquier cambio destructivo).
 #   3. Limpiar datos/qdrant_mv/ y levantar MK + MV + M1 via docker compose.
 #      M1: cargar_landing.py → dbt seed → dbt snapshot → dbt run → orquestador.
-#   4. Local: pytest valida chunks_generados_dev.json contra e2e_escritura.yaml.
+#   4. Local: pytest valida chunks_generados_dev.json contra e2e_ingesta.yaml.
 #
 # Uso:
-#   bash scripts/run_e2e_escritura.sh
-#   bash scripts/run_e2e_escritura.sh tests/e2e_escritura.yaml
+#   bash scripts/run_e2e_ingesta.sh
+#   bash scripts/run_e2e_ingesta.sh tests/e2e_ingesta.yaml
 #
 # Variables de entorno:
 #   MASTER_SECRET  — secreto de cifrado (obligatorio)
@@ -23,7 +23,7 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 # Configuración
 # ---------------------------------------------------------------------------
-COMPOSE_FILE="docker-compose.escritura.yml"
+COMPOSE_FILE="docker-compose.ingesta.yml"
 
 # Si ILLARI_IMAGE no está definida, leer de .env o construir desde ILLARI_TAG.
 if [[ -z "${ILLARI_IMAGE:-}" ]]; then
@@ -41,7 +41,7 @@ else
 fi
 
 REPO_RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
-SUITE_REL="tests/e2e_escritura.yaml"
+SUITE_REL="tests/e2e_ingesta.yaml"
 
 for arg in "$@"; do
     case "$arg" in
@@ -96,11 +96,11 @@ fi
 # ---------------------------------------------------------------------------
 TS=$(date +%Y%m%d-%H%M%S)
 OUT_DIR="${REPO_RAIZ}/tests/results"
-OUT_FILE="${OUT_DIR}/e2e_escritura-${TS}.txt"
+OUT_FILE="${OUT_DIR}/e2e_ingesta-${TS}.txt"
 mkdir -p "$OUT_DIR"
 
 echo ""
-echo "=== Illari E2E escritura — minera ==="
+echo "=== Illari E2E ingesta — minera ==="
 echo "Suite  : ${SUITE_ABS}"
 echo "Imagen : ${ILLARI_IMAGE}"
 echo "Output : ${OUT_FILE}"
@@ -193,7 +193,7 @@ echo ""
 echo "[4/4] Validando chunks con pytest (JSON + BDV)..."
 echo ""
 
-ILLARI_E2E_ESCRITURA="${SUITE_ABS}" \
+ILLARI_E2E_INGESTA="${SUITE_ABS}" \
 ILLARI_E2E_RAIZ="${REPO_RAIZ}" \
 python3 -m pytest "${TEST_PIPELINE}" -v -m e2e \
     --rootdir="${ILLARI_TESTS}/.." \

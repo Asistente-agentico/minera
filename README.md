@@ -43,22 +43,22 @@ modelos/               — capa de transformación (interna; no expuesta al clie
 
 scripts/
   preparar_landing.py       — extrae hojas del xlsx en formato ancho
-  run_e2e_escritura.sh/.ps1 — E2E escritura: MK → MV (BDV) ← M1 via docker compose
-  run_e2e_lectura.sh/.ps1   — E2E lectura: M2 + MA + MV contra BDV
-  run_e2e_m3.sh/.ps1        — E2E reportes M3: MA + M3 via docker compose (sin MK/MV)
+  run_e2e_ingesta.sh/.ps1 — E2E ingesta: MK → MV (BDV) ← M1 via docker compose
+  run_e2e_consulta.sh/.ps1   — E2E consulta: M2 + MA + MV contra BDV
+  run_e2e_informes-consumir.sh/.ps1        — E2E informes-consumir: MA + M3 via docker compose (sin MK/MV)
   check_marts.py             — diagnóstico: cuenta filas en marts oro y silver
   check_snapshots.py         — diagnóstico: cuenta filas y columnas en snapshots
 
-docker-compose.escritura.yml  — orquesta MK + MV + M1 para el E2E de escritura
-docker-compose.m3.yml         — orquesta MA + M3 para el E2E de reportes
+docker-compose.ingesta.yml  — orquesta MK + MV + M1 para el E2E de ingesta
+docker-compose.informes-consumir.yml         — orquesta MA + M3 para el E2E de reportes
 
 tests/
-  e2e_lectura.yaml       — suite E2E lectura (M2): 4 perfiles, 11 escenarios
-  e2e_escritura.yaml     — suite E2E escritura (M1): conteo, gobernanza, PII, cifrado
-  e2e_m3_reportes.yaml   — suite E2E reportes (M3): 4 perfiles, 12 escenarios
+  e2e_consulta.yaml       — suite E2E consulta (M2): 4 perfiles, 11 escenarios
+  e2e_ingesta.yaml     — suite E2E ingesta (M1): conteo, gobernanza, PII, cifrado
+  e2e_informes-consumir.yaml   — suite E2E reportes (M3): 4 perfiles, 12 escenarios
 
 datos/                 — gitignoreado (PII + datos del cliente; solo en ambiente local)
-  qdrant_mv/           — BDV Qdrant embebida generada por el E2E escritura
+  qdrant_mv/           — BDV Qdrant embebida generada por el E2E ingesta
 ```
 
 ---
@@ -121,10 +121,10 @@ dbt run
 
 ### Tests E2E
 
-Tres suites; escritura y lectura se ejecutan en orden (escritura puebla la BDV que usa lectura).
+Tres suites; ingesta y consulta se ejecutan en orden (ingesta puebla la BDV que usa consulta).
 M3 es independiente y solo necesita `datos/minera.duckdb`.
 
-#### E2E escritura (M1 → MV → BDV)
+#### E2E ingesta (M1 → MV → BDV)
 
 Levanta MK, MV y M1 via docker compose. M1 corre el pipeline completo y deja
 los chunks cifrados en `datos/qdrant_mv/` (Qdrant embebido de MV). Requiere `MASTER_SECRET`.
@@ -132,42 +132,42 @@ los chunks cifrados en `datos/qdrant_mv/` (Qdrant embebido de MV). Requiere `MAS
 ```bash
 # Linux/macOS
 export MASTER_SECRET="<secreto>"
-bash scripts/run_e2e_escritura.sh
+bash scripts/run_e2e_ingesta.sh
 
 # Windows
 $env:MASTER_SECRET = "<secreto>"
-.\scripts\run_e2e_escritura.ps1
+.\scripts\run_e2e_ingesta.ps1
 ```
 
-#### E2E lectura (M2 + MA + MV)
+#### E2E consulta (M2 + MA + MV)
 
-Valida consultas RAG contra la BDV poblada por la suite de escritura.
-Requiere que `datos/qdrant_mv/` exista (correr escritura primero).
+Valida consultas RAG contra la BDV poblada por la suite de ingesta.
+Requiere que `datos/qdrant_mv/` exista (correr ingesta primero).
 
 ```bash
 # Linux/macOS
 export MASTER_SECRET="<secreto>"
-bash scripts/run_e2e_lectura.sh
+bash scripts/run_e2e_consulta.sh
 
 # Windows
 $env:MASTER_SECRET = "<secreto>"
-.\scripts\run_e2e_lectura.ps1
+.\scripts\run_e2e_consulta.ps1
 ```
 
-11 escenarios lectura: 5 de negocio (P1×2 perfiles + P2 + P3 + P4), 2 de autenticación,
+11 escenarios consulta: 5 de negocio (P1×2 perfiles + P2 + P3 + P4), 2 de autenticación,
 1 de payload inválido, 1 sin match semántico, 2 de gobernanza (acceso denegado).
 
-#### E2E reportes M3 (MA + M3)
+#### E2E informes-consumir (MA + M3)
 
 Valida los reportes estructurados de M3: gobernanza por planta, parámetros opcionales
 y autenticación. Lee desde DuckDB directamente; no requiere `MASTER_SECRET` ni BDV.
 
 ```bash
 # Linux/macOS
-bash scripts/run_e2e_m3.sh
+bash scripts/run_e2e_informes-consumir.sh
 
 # Windows
-.\scripts\run_e2e_m3.ps1
+.\scripts\run_e2e_informes-consumir.ps1
 ```
 
 12 escenarios: 2 de autenticación, 1 de listado, 1 de reporte inexistente,

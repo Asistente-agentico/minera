@@ -1,15 +1,15 @@
 ﻿#!/usr/bin/env bash
-# run_e2e_lectura.sh — Levanta MK+MV+MA+M2 via docker compose y valida
+# run_e2e_consulta.sh — Levanta MK+MV+MA+M2 via docker compose y valida
 #                      consultas RAG con pytest local.
 #
-# Prerrequisito: datos/qdrant_mv/ debe existir (correr run_e2e_escritura.sh primero).
+# Prerrequisito: datos/qdrant_mv/ debe existir (correr run_e2e_ingesta.sh primero).
 #
 # Uso:
-#   bash scripts/run_e2e_lectura.sh
-#   bash scripts/run_e2e_lectura.sh tests/e2e_lectura.yaml
-#   bash scripts/run_e2e_lectura.sh --llm eco
-#   bash scripts/run_e2e_lectura.sh --llm gemini
-#   bash scripts/run_e2e_lectura.sh --llm stub
+#   bash scripts/run_e2e_consulta.sh
+#   bash scripts/run_e2e_consulta.sh tests/e2e_consulta.yaml
+#   bash scripts/run_e2e_consulta.sh --llm eco
+#   bash scripts/run_e2e_consulta.sh --llm gemini
+#   bash scripts/run_e2e_consulta.sh --llm stub
 #
 # Variables de entorno:
 #   MASTER_SECRET   — secreto de cifrado (obligatorio)
@@ -23,7 +23,7 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 # Configuración
 # ---------------------------------------------------------------------------
-COMPOSE_FILE="docker-compose.lectura.yml"
+COMPOSE_FILE="docker-compose.consulta.yml"
 
 # Si ILLARI_IMAGE no está definida, leer de .env o construir desde ILLARI_TAG.
 if [[ -z "${ILLARI_IMAGE:-}" ]]; then
@@ -41,7 +41,7 @@ else
 fi
 
 REPO_RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
-SUITE_REL="tests/e2e_lectura.yaml"
+SUITE_REL="tests/e2e_consulta.yaml"
 LLM_PROVEEDOR="eco"
 
 for arg in "$@"; do
@@ -128,7 +128,7 @@ fi
 
 if [[ ! -d "${REPO_RAIZ}/datos/qdrant_mv" ]]; then
     echo "Error: datos/qdrant_mv/ no encontrado." >&2
-    echo "Ejecuta run_e2e_escritura.sh primero para poblar la BDV." >&2
+    echo "Ejecuta run_e2e_ingesta.sh primero para poblar la BDV." >&2
     exit 1
 fi
 
@@ -150,11 +150,11 @@ fi
 # ---------------------------------------------------------------------------
 TS=$(date +%Y%m%d-%H%M%S)
 OUT_DIR="${REPO_RAIZ}/tests/results"
-OUT_FILE="${OUT_DIR}/e2e_lectura-${TS}.txt"
+OUT_FILE="${OUT_DIR}/e2e_consulta-${TS}.txt"
 mkdir -p "$OUT_DIR"
 
 echo ""
-echo "=== Illari E2E lectura — minera ==="
+echo "=== Illari E2E consulta — minera ==="
 echo "Suite  : ${SUITE_ABS}"
 echo "Imagen : ${ILLARI_IMAGE}"
 echo "LLM    : ${LLM_PROVEEDOR} (${CHAT_YAML})"
@@ -285,7 +285,7 @@ echo ""
 # ---------------------------------------------------------------------------
 # Fase 3 — Validación con pytest local
 # ---------------------------------------------------------------------------
-echo "[3/3] Ejecutando pytest E2E lectura..."
+echo "[3/3] Ejecutando pytest E2E consulta..."
 echo ""
 
 ILLARI_E2E_SUITE="${SUITE_ABS}" \

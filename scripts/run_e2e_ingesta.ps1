@@ -1,18 +1,17 @@
 <#
 .SYNOPSIS
-    Pipeline E2E lectura: levanta MK+MV+MA+M2 via docker compose, valida con pytest local.
+    Pipeline E2E ingesta: MK+MV+M1 via docker compose, valida con pytest local.
 
 .DESCRIPTION
     Tres fases:
       1. docker compose pull.
-      2. Levantar MK + MV + MA + M2 via docker compose (en background).
-         Espera hasta que M2 responda /health en localhost:8000.
-      3. Local: pytest valida consultas RAG contra los servicios reales.
-
-    Prerrequisito: datos/qdrant_mv/ debe existir (correr run_e2e_escritura.ps1 primero).
+      2. Limpiar datos/qdrant_mv/ y levantar MK + MV + M1 via docker compose.
+         MK sirve las claves KEK a MV. MV cifra y persiste chunks en Qdrant.
+         M1 escribe chunks_generados_dev.json (--dev) y envía a MV.
+      3. Local: pytest valida chunks_generados_dev.json contra e2e_ingesta.yaml.
 
 .PARAMETER Suite
-    Ruta relativa al YAML de suite. Default: tests/e2e_lectura.yaml
+    Ruta relativa al YAML de suite. Default: tests/e2e_ingesta.yaml
 
 .PARAMETER Tag
     Tag de imagen del registro. Default: dev-0.7.1 (o $env:ILLARI_TAG si está definido).
@@ -25,13 +24,13 @@
 
 .EXAMPLE
     $env:MASTER_SECRET = "<secreto>"
-    .\scripts\run_e2e_lectura.ps1
-    .\scripts\run_e2e_lectura.ps1 -Suite tests/e2e_lectura.yaml
-    .\scripts\run_e2e_lectura.ps1 -Image asistente-virtual:local
+    .\scripts\run_e2e_ingesta.ps1
+    .\scripts\run_e2e_ingesta.ps1 -Suite tests/e2e_ingesta.yaml
+    .\scripts\run_e2e_ingesta.ps1 -Image asistente-virtual:local
 #>
 
 param(
-    [string]$Suite = "tests/e2e_lectura.yaml",
+    [string]$Suite = "tests/e2e_ingesta.yaml",
     [string]$Tag   = "",
     [string]$Image = ""
 )
@@ -42,7 +41,7 @@ $ErrorActionPreference = "Stop"
 $OutputEncoding          = [System.Text.Encoding]::UTF8
 
 $illariTag   = if ($Tag) { $Tag } elseif ($env:ILLARI_TAG) { $env:ILLARI_TAG } else { "dev-0.7.1" }
-$composeFile = "docker-compose.lectura.yml"
+$composeFile = "docker-compose.ingesta.yml"
 
 # ILLARI_IMAGE permite usar imagen construida localmente (omite pull).
 $imagenLocal = $false
@@ -66,10 +65,11 @@ if ($Image) {
     }
 }
 
-$repoRaiz    = Split-Path -Parent $PSScriptRoot
-$suiteAbs    = Join-Path $repoRaiz $Suite
-$illariTests = Join-Path (Split-Path -Parent $repoRaiz) "Illari\tests"
-$composeAbs  = Join-Path $repoRaiz $composeFile
+$repoRaiz     = Split-Path -Parent $PSScriptRoot
+$suiteAbs     = Join-Path $repoRaiz $Suite
+$illariTests  = Join-Path (Split-Path -Parent $repoRaiz) "Illari\tests"
+$testPipeline = Join-Path $illariTests "e2e_escritura\test_pipeline.py"
+$composeAbs   = Join-Path $repoRaiz $composeFile
 
 # -- Leer MASTER_SECRET (env > .env > error) --------------------------------
 if (-not $env:MASTER_SECRET) {
@@ -91,28 +91,24 @@ if (-not (Test-Path $suiteAbs)) {
     Write-Error "Suite no encontrada: $suiteAbs"
     exit 1
 }
-if (-not (Test-Path (Join-Path $repoRaiz "datos\qdrant_mv"))) {
-    Write-Error "datos/qdrant_mv/ no encontrado.`nEjecuta run_e2e_escritura.ps1 primero para poblar la BDV."
-    exit 1
-}
 if (-not (Test-Path $composeAbs)) {
     Write-Error "$composeFile no encontrado en $repoRaiz"
     exit 1
 }
-if (-not (Test-Path $illariTests)) {
-    Write-Error "tests/ de Illari no encontrado en $illariTests`nVerifica que el repo Illari esté en $(Split-Path -Parent $repoRaiz)\Illari"
+if (-not (Test-Path $testPipeline)) {
+    Write-Error "test_pipeline.py no encontrado en $testPipeline`nVerifica que el repo Illari esté en $(Split-Path -Parent $repoRaiz)\Illari"
     exit 1
 }
 
 # -- Archivo de resultado ---------------------------------------------------
 $ts      = Get-Date -Format "yyyyMMdd-HHmmss"
 $outDir  = Join-Path $repoRaiz "tests\results"
-$outFile = Join-Path $outDir "e2e_lectura-$ts.txt"
+$outFile = Join-Path $outDir "e2e_ingesta-$ts.txt"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 New-Item -ItemType File -Force -Path $outFile | Out-Null
 
 Write-Host ""
-Write-Host "=== Illari E2E lectura -- minera ==="
+Write-Host "=== Illari E2E ingesta -- minera ==="
 Write-Host "Suite  : $suiteAbs"
 Write-Host "Imagen : $illariImage"
 Write-Host "Output : $outFile"
@@ -135,55 +131,54 @@ if ($imagenLocal) {
 }
 Write-Host ""
 
-# -- Fase 2: levantar servicios en background -------------------------------
-Write-Host "[2/3] Levantando servicios MK -> MV -> MA + M2..."
+# -- Fase 2: limpiar BDV y ejecutar pipeline --------------------------------
+Write-Host "[2/3] Ejecutando pipeline MK -> MV -> M1 via docker compose..."
 Write-Host ""
 
-docker compose -f $composeAbs up -d |
+$qdrantDir = Join-Path $repoRaiz "datos\qdrant_mv"
+Write-Host "  Limpiando $qdrantDir..."
+if (Test-Path $qdrantDir) {
+    Remove-Item -Recurse -Force $qdrantDir
+    Write-Host "  Eliminado: $qdrantDir"
+} else {
+    Write-Host "  datos/qdrant_mv/ no existe, nada que limpiar."
+}
+Write-Host ""
+
+docker compose -f $composeAbs up --abort-on-container-exit --exit-code-from m1 |
     Tee-Object -FilePath $outFile -Append
+$composeExit = $LASTEXITCODE
 
-# Esperar M2 healthy (máximo 120 segundos)
-Write-Host ""
-Write-Host "  Esperando M2 en http://localhost:8000/health..."
-$m2Ok = $false
-for ($i = 1; $i -le 24; $i++) {
-    try {
-        $r = Invoke-WebRequest -Uri "http://localhost:8000/health" -UseBasicParsing -TimeoutSec 3
-        if ($r.StatusCode -eq 200) {
-            Write-Host "  M2 listo (intento $i/24)"
-            $m2Ok = $true
-            break
-        }
-    } catch { }
-    Write-Host "  Intento $i/24 -- esperando 5s..."
-    Start-Sleep -Seconds 5
+docker compose -f $composeAbs down --remove-orphans 2>$null | Out-Null
+
+if ($composeExit -ne 0) {
+    Write-Host ""
+    Write-Host "FAILED pipeline docker compose (exit $composeExit) -- ver: $outFile" -ForegroundColor Red
+    exit $composeExit
 }
 
-if (-not $m2Ok) {
+$chunksJson = Join-Path $repoRaiz "datos\chunks_generados_dev.json"
+if (-not (Test-Path $chunksJson)) {
     Write-Host ""
-    Write-Host "FAILED: M2 no respondio healthy en 120s." -ForegroundColor Red
-    Write-Host "--- Logs de servicios ---"
-    docker compose -f $composeAbs logs --tail=30 2>&1 | Write-Host
-    docker compose -f $composeAbs down --remove-orphans 2>$null | Out-Null
+    Write-Host "FAILED: chunks_generados_dev.json no fue generado por el pipeline." -ForegroundColor Red
     exit 1
 }
+
+Write-Host ""
+Write-Host "  Pipeline completado. chunks_generados_dev.json generado y chunks en BDV."
 Write-Host ""
 
 # -- Fase 3: pytest local ---------------------------------------------------
-Write-Host "[3/3] Ejecutando pytest E2E lectura..."
+Write-Host "[3/3] Validando chunks_generados_dev.json con pytest..."
 Write-Host ""
 
-$env:ILLARI_E2E_SUITE   = $suiteAbs
-$env:ILLARI_E2E_CLIENTE = $repoRaiz
-$env:ILLARI_E2E_M2_URL  = "http://localhost:8000"
-$env:ILLARI_E2E_MA_URL  = "http://localhost:8001"
+$env:ILLARI_E2E_INGESTA = $suiteAbs
+$env:ILLARI_E2E_RAIZ      = $repoRaiz
 
-python -m pytest (Join-Path $illariTests "e2e") -v -m e2e `
+python -m pytest $testPipeline -v -m e2e `
     --rootdir=(Join-Path $illariTests "..") |
     Tee-Object -FilePath $outFile -Append
 $pytestExit = $LASTEXITCODE
-
-docker compose -f $composeAbs down --remove-orphans 2>$null | Out-Null
 
 Write-Host ""
 if ($pytestExit -eq 0) {

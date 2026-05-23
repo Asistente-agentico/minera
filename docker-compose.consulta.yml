@@ -1,14 +1,14 @@
-﻿# docker-compose.lectura.yml — Suite E2E lectura completa
+﻿# docker-compose.consulta.yml — Suite E2E lectura completa
 #
 # Levanta MK → MV → MA + M2.
 # MA (8001) y M2 (8000) se exponen al host para que pytest corra localmente.
 #
-# Prerrequisito: datos/qdrant_mv/ poblada por la suite de escritura.
+# Prerrequisito: datos/qdrant_mv/ poblada por la suite de ingesta.
 #
 # Uso (desde la raíz del repo minera):
-#   MASTER_SECRET=xxx docker compose -f docker-compose.lectura.yml up -d
+#   MASTER_SECRET=xxx docker compose -f docker-compose.consulta.yml up -d
 #   # esperar a M2 healthy, luego ejecutar pytest
-#   docker compose -f docker-compose.lectura.yml down --remove-orphans
+#   docker compose -f docker-compose.consulta.yml down --remove-orphans
 #
 # Variables de entorno:
 #   MASTER_SECRET  — secreto de cifrado (obligatorio)

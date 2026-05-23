@@ -1,12 +1,12 @@
 ﻿#!/usr/bin/env bash
-# run_e2e_m3.sh — Levanta MA+M3 via docker compose y valida reportes con pytest local.
+# run_e2e_informes-consumir.sh — Levanta MA+M3 via docker compose y valida reportes con pytest local.
 #
 # Prerrequisito: datos/minera.duckdb presente (dbt seed && dbt run).
 # No requiere MASTER_SECRET (M3 no usa MV ni Qdrant).
 #
 # Uso:
-#   bash scripts/run_e2e_m3.sh
-#   bash scripts/run_e2e_m3.sh tests/e2e_m3_reportes.yaml
+#   bash scripts/run_e2e_informes-consumir.sh
+#   bash scripts/run_e2e_informes-consumir.sh tests/e2e_informes-consumir.yaml
 #
 # Variables de entorno:
 #   ILLARI_TAG    — tag de imagen del registro (default: dev-0.7.3)
@@ -18,7 +18,7 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 # Configuración
 # ---------------------------------------------------------------------------
-COMPOSE_FILE="docker-compose.m3.yml"
+COMPOSE_FILE="docker-compose.informes-consumir.yml"
 
 # Si ILLARI_IMAGE no está definida, leer de .env o construir desde ILLARI_TAG.
 if [[ -z "${ILLARI_IMAGE:-}" ]]; then
@@ -36,7 +36,7 @@ else
 fi
 
 REPO_RAIZ="$(cd "$(dirname "$0")/.." && pwd)"
-SUITE_REL="tests/e2e_m3_reportes.yaml"
+SUITE_REL="tests/e2e_informes-consumir.yaml"
 
 for arg in "$@"; do
     case "$arg" in
@@ -79,11 +79,11 @@ fi
 # ---------------------------------------------------------------------------
 TS=$(date +%Y%m%d-%H%M%S)
 OUT_DIR="${REPO_RAIZ}/tests/results"
-OUT_FILE="${OUT_DIR}/e2e_m3-${TS}.txt"
+OUT_FILE="${OUT_DIR}/e2e_informes-consumir-${TS}.txt"
 mkdir -p "$OUT_DIR"
 
 echo ""
-echo "=== Illari E2E M3 (reportes) — minera ==="
+echo "=== Illari E2E informes-consumir — minera ==="
 echo "Suite  : ${SUITE_ABS}"
 echo "Imagen : ${ILLARI_IMAGE}"
 echo "Output : ${OUT_FILE}"
@@ -152,10 +152,10 @@ echo ""
 # ---------------------------------------------------------------------------
 # Fase 3 — Validación con pytest local
 # ---------------------------------------------------------------------------
-echo "[3/3] Ejecutando pytest E2E M3..."
+echo "[3/3] Ejecutando pytest E2E informes-consumir..."
 echo ""
 
-ILLARI_E2E_M3="${SUITE_ABS}" \
+ILLARI_E2E_INFORMES_CONSUMIR="${SUITE_ABS}" \
 ILLARI_E2E_CLIENTE="${REPO_RAIZ}" \
 ILLARI_E2E_M3_URL="http://localhost:8005" \
 ILLARI_E2E_MA_URL="http://localhost:8001" \

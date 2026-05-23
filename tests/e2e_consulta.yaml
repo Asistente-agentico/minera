@@ -2,7 +2,7 @@
 # Dominio: seguridad ocupacional — concentración de polvo respirable (DS 594).
 #
 # Ejecutar desde el repo Illari:
-#   export ILLARI_E2E_SUITE=/ruta/a/minera/tests/e2e_lectura.yaml
+#   export ILLARI_E2E_SUITE=/ruta/a/minera/tests/e2e_consulta.yaml
 #   export ILLARI_E2E_CLIENTE=/ruta/a/minera
 #   export MASTER_SECRET=<mismo secreto usado en chunker --embed>
 #   pytest tests/e2e/ -v -m e2e

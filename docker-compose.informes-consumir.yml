@@ -1,4 +1,4 @@
-# docker-compose.m3.yml — Suite E2E reportes M3
+# docker-compose.informes-consumir.yml — Suite E2E reportes M3
 #
 # Levanta MA + M3.
 # MA (8001) y M3 (8005) se exponen al host para que pytest corra localmente.
@@ -7,9 +7,9 @@
 # No requiere MASTER_SECRET (M3 no usa MV ni Qdrant).
 #
 # Uso (desde la raíz del repo minera):
-#   docker compose -f docker-compose.m3.yml up -d
+#   docker compose -f docker-compose.informes-consumir.yml up -d
 #   # esperar a M3 healthy, luego ejecutar pytest
-#   docker compose -f docker-compose.m3.yml down --remove-orphans
+#   docker compose -f docker-compose.informes-consumir.yml down --remove-orphans
 #
 # Variables de entorno:
 #   ILLARI_TAG    — tag de imagen del registro (default: dev-0.7.3)

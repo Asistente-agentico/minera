@@ -1,10 +1,10 @@
-﻿# docker-compose.escritura.yml — Suite E2E escritura completa
+﻿# docker-compose.ingesta.yml — Suite E2E ingesta completa
 #
 # Levanta MK → MV (BDV embebida) y corre M1 como job único.
 # Los chunks quedan indexados en datos/qdrant_mv/ (Qdrant embebido de MV).
 #
 # Uso (desde la raíz del repo minera):
-#   MASTER_SECRET=xxx docker compose -f docker-compose.escritura.yml up \
+#   MASTER_SECRET=xxx docker compose -f docker-compose.ingesta.yml up \
 #       --abort-on-container-exit --exit-code-from m1
 #
 # Variables de entorno:

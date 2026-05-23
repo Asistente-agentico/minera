@@ -1,4 +1,4 @@
-# Suite E2E escritura (M1) — caso Minera
+# Suite E2E ingesta (M1) — caso Minera
 # Dominio: seguridad ocupacional — concentración de polvo respirable (DS 594).
 #
 # Valida que el pipeline M1 (dbt + chunker) produzca los chunks esperados:
@@ -9,16 +9,16 @@
 # incluido en la imagen Docker (deuda: Dockerfile sin COPY mk/).
 #
 # Ejecutar desde el repo Illari:
-#   export ILLARI_E2E_ESCRITURA=/ruta/a/minera/tests/e2e_escritura.yaml
+#   export ILLARI_E2E_INGESTA=/ruta/a/minera/tests/e2e_escritura.yaml
 #   export ILLARI_E2E_RAIZ=/ruta/a/minera
 #   pytest tests/e2e_escritura/test_pipeline.py -v -m e2e
 #
 # O desde minera usando el script:
-#   bash scripts/run_e2e_escritura.sh
+#   bash scripts/run_e2e_ingesta.sh
 #
 # Prerequisito: datos/minera.duckdb con seeds cargados (dbt seed ejecutado).
 
-suite: minera_escritura
+suite: minera_ingesta
 version: "1.0"
 descripcion: "Pipeline M1: dbt + chunker → chunks_generados_dev.json validado por regla"
 
