@@ -41,3 +41,6 @@ secrets.yml
 *.pfx
 *.crt
 *.cert
+
+# Claude Code worktrees
+.claude/
