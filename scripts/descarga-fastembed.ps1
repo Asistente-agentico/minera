@@ -40,4 +40,4 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host ""
-Write-Host "OK — modelo en $cacheDir" -ForegroundColor Green
+Write-Host "OK - modelo en $cacheDir" -ForegroundColor Green
