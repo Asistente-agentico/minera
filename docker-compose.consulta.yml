@@ -58,6 +58,7 @@ services:
       MK_URL: "http://mk:8003"
       CLIENTE_DIR: /cliente/minera
       MV_PORT: "8002"
+      FASTEMBED_CACHE_PATH: /home/asistente/.cache
     healthcheck:
       test: ["CMD", "python", "-c",
              "import urllib.request; urllib.request.urlopen('http://localhost:8002/health')"]
