@@ -10,7 +10,7 @@
 # Prerequisito: dbt run + chunker --embed ejecutados contra datos reales
 # del cliente (ver minera/README.md §Desarrollo).
 #
-# Campo 'texto': consulta del usuario (campo del body POST /api/chat/preguntar).
+# Campo 'texto': consulta del usuario (body POST /conversaciones/{id}/mensaje).
 # Campo 'contiene_texto': lista de términos que deben aparecer en la respuesta
 #   del agente (AdaptadorEco devuelve el prompt que incluye el texto de chunks).
 #   Los valores se derivan de los seeds y plantillas del cliente
@@ -141,8 +141,8 @@ escenarios:
       status: 401
 
   # ── Validación de payload ────────────────────────────────────────────────
-  # POST /api/chat/preguntar retorna 400 (texto_requerido) para texto vacío,
-  # no 422 — es validación manual del router.
+  # POST /conversaciones/{id}/mensaje retorna 400 (texto_requerido) para texto vacío,
+  # no 422 — es validación manual del router (strip + if not texto).
   - id: texto_vacio
     perfil: jefe_seguridad
     texto: ""

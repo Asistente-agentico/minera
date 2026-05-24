@@ -76,7 +76,7 @@ services:
       MA_USER_HASH_amVmZS5zZWd1cmlkYWRAdGVzdA: "$$2b$$04$$S5S3tejM5JDZjzSbSPIIr.JAMtP4oMpKgT/UzzWSw3/qCS.joIaJq"
       MA_USER_HASH_b3BlcmFkb3IuY2hhbmNhZG9AdGVzdA: "$$2b$$04$$S5S3tejM5JDZjzSbSPIIr.JAMtP4oMpKgT/UzzWSw3/qCS.joIaJq"
       MA_USER_HASH_YXVkaXRvci5hbWJpZW50YWxAdGVzdA: "$$2b$$04$$S5S3tejM5JDZjzSbSPIIr.JAMtP4oMpKgT/UzzWSw3/qCS.joIaJq"
-      MA_USER_HASH_dGVjbmljby5tZWRpb2FtYmllbnRlQHRlc3Q: "$$2b$$04$$S5S3tejM5JDZjzSbSPIIr.JAMtP4oMpKgT/UzzWSw3/qCS.joIaJq"
+      MA_USER_HASH_dGVjbmljby5tZWRpb2FtYmllbnRlLm1vbGllbmRhQHRlc3Q: "$$2b$$04$$S5S3tejM5JDZjzSbSPIIr.JAMtP4oMpKgT/UzzWSw3/qCS.joIaJq"
     ports:
       - "8001:8001"
     healthcheck:
