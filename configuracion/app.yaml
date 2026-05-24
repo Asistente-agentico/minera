@@ -27,7 +27,7 @@ modulos:
     habilitado: true
     base_url: null
     endpoints: []
-  consultas:
+  chat:
     version: "0.8.0"
     habilitado: true
     base_url: "http://localhost:8004"
