@@ -15,10 +15,10 @@
 #   ambito y clasificacion del JWT no aplican (oro_p00002 no tiene esas columnas).
 #
 # Perfiles (permisos.yaml):
-#   jefe_seguridad        → planta=["todas"]    → 8 plantas → 16 filas
-#   operador_chancado     → planta=[chancado]   → 5 plantas → 10 filas
-#   auditor_ambiental     → planta=[todas]      → 8 plantas → 16 filas
-#   tecnico_molienda      → planta=[molienda]   → 3 plantas →  6 filas
+#   jefe_seguridad        → planta=["Todas"]    → 8 plantas → 16 filas
+#   operador_chancado     → planta=["Chancado"] → 5 plantas → 10 filas
+#   auditor_ambiental     → planta=["Todas"]    → 8 plantas → 16 filas
+#   tecnico_molienda      → planta=["Molienda"] → 3 plantas →  6 filas
 
 suite: minera_m3
 version: "1.0"
@@ -83,7 +83,7 @@ escenarios:
       status: 404
 
   # ── Gobernanza: acceso completo (8 plantas) ──────────────────────────────
-  # auditor_ambiental y jefe_seguridad tienen planta=[todas] → 16 filas.
+  # auditor_ambiental y jefe_seguridad tienen planta=["Todas"] → 16 filas.
 
   - id: auditor_todas_plantas
     reporte: concentracion_anual
@@ -102,7 +102,7 @@ escenarios:
       filas_exactas: 16
 
   # ── Gobernanza: acceso restringido por grupo ──────────────────────────────
-  # operador_chancado tiene planta=[chancado] → 5 plantas → 10 filas (5 × 2 años).
+  # operador_chancado tiene planta=["Chancado"] → 5 plantas → 10 filas (5 × 2 años).
 
   - id: operador_grupo_chancado
     reporte: concentracion_anual
@@ -114,7 +114,7 @@ escenarios:
       plantas_presentes: ["Pre-Chancado", "Chancado 2° y 3°"]
       plantas_excluidas: ["Molienda SAG", "CDM"]
 
-  # tecnico_molienda tiene planta=[Molienda] → 3 plantas → 6 filas (3 × 2 años).
+  # tecnico_molienda tiene planta=["Molienda"] → 3 plantas → 6 filas (3 × 2 años).
   # Su ambito="Medioambiente" no está en oro_p00002; dimensiones_requeridas=[planta]
   # filtra el WHERE a solo planta.
 

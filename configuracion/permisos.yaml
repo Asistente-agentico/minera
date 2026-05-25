@@ -11,9 +11,10 @@ dimensiones:
   planta:
     tipo: enum
     nombre_ui: "Planta"
-    # Convención: nombres_ui_grupos SOLO para aliases de grupo (sin contraparte
-    # en BD). Los valores concretos deben aparecer tal cual están en la BD
-    # fuente (bronce_mediciones.sql) para match exacto contra chunks de Qdrant.
+    # Convención: la clave de cada entrada en `grupos` es directamente el
+    # string que muestra la UI (sin separadores). Los valores concretos
+    # aparecen tal cual están en la BD fuente (bronce_mediciones.sql) para
+    # match exacto contra chunks de Qdrant.
     valores:
       - "Pre-Chancado"
       - "Nodo 3500"
@@ -25,17 +26,17 @@ dimensiones:
       - "CDM"
 
     grupos:
-      chancado:
+      Chancado:
         - "Pre-Chancado"
         - "Nodo 3500"
         - "Chancado 2° y 3°"
         - "Chancado Fino 3°"
         - "Chancado Fino 4°"
-      molienda:
+      Molienda:
         - "Molienda SAG"
         - "Molienda Convencional"
         - "CDM"
-      todas:
+      Todas:
         - "Pre-Chancado"
         - "Nodo 3500"
         - "Chancado 2° y 3°"
@@ -44,32 +45,24 @@ dimensiones:
         - "Molienda SAG"
         - "Molienda Convencional"
         - "CDM"
-
-    nombres_ui_grupos:
-      chancado: "Chancado"
-      molienda: "Molienda"
-      todas: "Todas"
 
   ambito:
     tipo: enum
     nombre_ui: "Ámbito"
-    # Convención: nombres_ui_grupos SOLO para grupos. Los valores concretos
-    # (Seguridad ocupacional, Medioambiente) aparecen tal cual en BD.
+    # Los valores concretos ("Seguridad ocupacional", "Medioambiente")
+    # aparecen tal cual están en BD. La clave del grupo es el display.
     valores:
       - "Seguridad ocupacional"
       - "Medioambiente"
     grupos:
-      todos:
+      Todos:
         - "Seguridad ocupacional"
         - "Medioambiente"
-    nombres_ui_grupos:
-      todos: "Todos"
 
   clasificacion:
     tipo: ordinal
     nombre_ui: "Clasificación"
-    # Sin grupos → sin nombres_ui_grupos. Los valores ordinales aparecen
-    # tal cual están definidos.
+    # Sin grupos. Los valores ordinales aparecen tal cual están definidos.
     valores:
       - "Público"
       - "Interno"
@@ -93,7 +86,7 @@ usuarios:
       reportes: [consumir]
     gobernanza:
       dimensiones:
-        planta: ["todas"]
+        planta: ["Todas"]
         ambito: ["Seguridad ocupacional"]
         clasificacion: "Restringido"
 
@@ -106,7 +99,7 @@ usuarios:
       reportes: [consumir]
     gobernanza:
       dimensiones:
-        planta: [chancado]
+        planta: ["Chancado"]
         ambito: ["Medioambiente"]
         clasificacion: "Interno"
 
@@ -119,8 +112,8 @@ usuarios:
       reportes: [consumir]
     gobernanza:
       dimensiones:
-        planta: [todas]
-        ambito: [todos]
+        planta: ["Todas"]
+        ambito: ["Todos"]
         clasificacion: "Restringido"
 
   - user_id: "tecnico.medioambiente.molienda@test"
@@ -132,6 +125,6 @@ usuarios:
       reportes: [consumir]
     gobernanza:
       dimensiones:
-        planta: [molienda]
+        planta: ["Molienda"]
         ambito: ["Medioambiente"]
         clasificacion: "Interno"
