@@ -111,6 +111,8 @@ escenarios:
     espera:
       status: 200
       filas_exactas: 10
+      plantas_presentes: [prechancado, chancado_2y3]
+      plantas_excluidas: [molienda_sag, molienda_cdm]
 
   # tecnico_molienda tiene planta=[molienda] → 3 plantas → 6 filas (3 × 2 años).
   # Su ambito="medioambiente" no está en oro_p00002; dimensiones_requeridas=[planta]
@@ -123,6 +125,8 @@ escenarios:
     espera:
       status: 200
       filas_exactas: 6
+      plantas_presentes: [molienda_sag, molienda_cdm]
+      plantas_excluidas: [prechancado, nodo_3500]
 
   # ── Parámetro opcional anio ───────────────────────────────────────────────
   # auditor + anio=2026 → 8 filas (una por planta, solo año 2026).
@@ -228,6 +232,9 @@ escenarios:
     espera:
       status: 200
       filas_exactas: 10
+      campos_fila: [planta, anio]
+      plantas_presentes: [prechancado, chancado_2y3]
+      plantas_excluidas: [molienda_sag, molienda_cdm]
 
   - id: consumir_tecnico_grupo_molienda
     operacion: consumir
@@ -237,6 +244,9 @@ escenarios:
     espera:
       status: 200
       filas_exactas: 6
+      campos_fila: [planta, anio]
+      plantas_presentes: [molienda_sag, molienda_cdm]
+      plantas_excluidas: [prechancado, nodo_3500]
 
   # consumir + parámetro anio como query string (?anio=2026).
 
@@ -252,3 +262,27 @@ escenarios:
       campos_fila:
         - planta
         - anio
+
+  # consumir + filtro_anio para perfiles restringidos (simetría con generar).
+
+  - id: consumir_operador_filtro_anio_2026
+    operacion: consumir
+    reporte: concentracion_anual
+    perfil: operador_chancado
+    parametros:
+      anio: 2026
+    espera:
+      status: 200
+      filas_exactas: 5
+      plantas_excluidas: [molienda_sag, molienda_cdm]
+
+  - id: consumir_tecnico_filtro_anio_2025
+    operacion: consumir
+    reporte: concentracion_anual
+    perfil: tecnico_molienda
+    parametros:
+      anio: 2025
+    espera:
+      status: 200
+      filas_exactas: 3
+      plantas_excluidas: [prechancado, nodo_3500]
