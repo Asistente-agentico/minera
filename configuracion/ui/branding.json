@@ -1,18 +1,16 @@
 {
+  "titulo": "Asistente Minera",
+  "subtitulo": "Seguridad Ocupacional y Medioambiente",
+  "logo_url": null,
+  "favicon_url": null,
   "colores": {
-    "primario": "#1a73e8",
-    "secundario": "#34a853",
-    "fondo": "#ffffff",
-    "texto": "#202124",
-    "acento": null
-  },
-  "tipografia": {
-    "fuente_principal": null,
-    "fuente_monoespaciada": null
-  },
-  "logo": {
-    "ruta": null,
-    "alt": "Asistente Minera"
-  },
-  "favicon": null
+    "navy": "#36424A",
+    "coral": "#E55302",
+    "paper": "#FFFFFF",
+    "cream": "#C4C1A0",
+    "rule": "#C4C1A0",
+    "ink": "#36424A",
+    "ok": "#0098AA",
+    "warn": "#F4AA00"
+  }
 }

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="MINERA">
+  <!-- Fondo cuadrado naranja Codelco (Pantone 166C) — formato del isotipo Codelco -->
+  <rect width="240" height="240" rx="12" fill="#E55302"/>
+
+  <!-- Jackhammer / martillo mecánico en silueta blanca -->
+  <g fill="#FFFFFF">
+    <!-- Mango T ergonómico arriba (asas curvadas) -->
+    <path d="M 78 56 Q 78 46 88 46 L 152 46 Q 162 46 162 56 L 162 64 L 78 64 Z"/>
+    <!-- Cuello vertical entre mango y cuerpo -->
+    <rect x="114" y="64" width="12" height="10"/>
+    <!-- Cuerpo cilíndrico (motor neumático) -->
+    <rect x="92" y="74" width="56" height="64" rx="3"/>
+    <!-- Agarre lateral derecho (manija característica) -->
+    <rect x="148" y="92" width="22" height="8" rx="2"/>
+    <!-- Cilindro de transición hacia broca -->
+    <rect x="104" y="138" width="32" height="10" rx="1"/>
+    <!-- Broca / cincel afilado -->
+    <polygon points="113,148 127,148 124,188 116,188"/>
+  </g>
+
+  <!-- Línea horizontal en el motor (división mecánica) — se "ve" como hendidura -->
+  <line x1="92" y1="102" x2="148" y2="102" stroke="#E55302" stroke-width="3"/>
+
+  <!-- "MINERA" en sans-serif geométrico, blanco -->
+  <text x="120" y="218" text-anchor="middle"
+        font-family="Inter, 'Helvetica Neue', Arial, sans-serif"
+        font-weight="700" font-size="26" letter-spacing="3" fill="#FFFFFF">MINERA</text>
+</svg>
