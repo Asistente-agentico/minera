@@ -111,8 +111,8 @@ escenarios:
     espera:
       status: 200
       filas_exactas: 10
-      plantas_presentes: [prechancado, chancado_2y3]
-      plantas_excluidas: [molienda_sag, molienda_cdm]
+      plantas_presentes: ["Pre-Chancado", "Chancado 2° y 3°"]
+      plantas_excluidas: ["Molienda SAG", "CDM"]
 
   # tecnico_molienda tiene planta=[molienda] → 3 plantas → 6 filas (3 × 2 años).
   # Su ambito="medioambiente" no está en oro_p00002; dimensiones_requeridas=[planta]
@@ -125,8 +125,8 @@ escenarios:
     espera:
       status: 200
       filas_exactas: 6
-      plantas_presentes: [molienda_sag, molienda_cdm]
-      plantas_excluidas: [prechancado, nodo_3500]
+      plantas_presentes: ["Molienda SAG", "CDM"]
+      plantas_excluidas: ["Pre-Chancado", "Nodo 3500"]
 
   # ── Parámetro opcional anio ───────────────────────────────────────────────
   # auditor + anio=2026 → 8 filas (una por planta, solo año 2026).
@@ -233,8 +233,8 @@ escenarios:
       status: 200
       filas_exactas: 10
       campos_fila: [planta, anio]
-      plantas_presentes: [prechancado, chancado_2y3]
-      plantas_excluidas: [molienda_sag, molienda_cdm]
+      plantas_presentes: ["Pre-Chancado", "Chancado 2° y 3°"]
+      plantas_excluidas: ["Molienda SAG", "CDM"]
 
   - id: consumir_tecnico_grupo_molienda
     operacion: consumir
@@ -245,8 +245,8 @@ escenarios:
       status: 200
       filas_exactas: 6
       campos_fila: [planta, anio]
-      plantas_presentes: [molienda_sag, molienda_cdm]
-      plantas_excluidas: [prechancado, nodo_3500]
+      plantas_presentes: ["Molienda SAG", "CDM"]
+      plantas_excluidas: ["Pre-Chancado", "Nodo 3500"]
 
   # consumir + parámetro anio como query string (?anio=2026).
 
@@ -274,7 +274,7 @@ escenarios:
     espera:
       status: 200
       filas_exactas: 5
-      plantas_excluidas: [molienda_sag, molienda_cdm]
+      plantas_excluidas: ["Molienda SAG", "CDM"]
 
   - id: consumir_tecnico_filtro_anio_2025
     operacion: consumir
@@ -285,4 +285,4 @@ escenarios:
     espera:
       status: 200
       filas_exactas: 3
-      plantas_excluidas: [prechancado, nodo_3500]
+      plantas_excluidas: ["Pre-Chancado", "Nodo 3500"]

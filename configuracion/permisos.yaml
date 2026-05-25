@@ -11,45 +11,38 @@ dimensiones:
   planta:
     tipo: enum
     nombre_ui: "Planta"
+    # valores = strings canónicos de bronce_mediciones.sql; sin nombres_ui_valores
+    # porque los valores ya son los strings de display (match exacto con chunks).
     valores:
-      - prechancado
-      - nodo_3500
-      - chancado_2y3
-      - chancado_fino_3
-      - chancado_fino_4
-      - molienda_sag
-      - molienda_convencional
-      - molienda_cdm
-    nombres_ui_valores:
-      prechancado: "Pre-chancado"
-      nodo_3500: "Nodo 3500"
-      chancado_2y3: "Chancado 2° y 3°"
-      chancado_fino_3: "Chancado fino 3°"
-      chancado_fino_4: "Chancado fino 4°"
-      molienda_sag: "Molienda SAG"
-      molienda_convencional: "Molienda convencional"
-      molienda_cdm: "CDM"
+      - "Pre-Chancado"
+      - "Nodo 3500"
+      - "Chancado 2° y 3°"
+      - "Chancado Fino 3°"
+      - "Chancado Fino 4°"
+      - "Molienda SAG"
+      - "Molienda Convencional"
+      - "CDM"
 
     grupos:
       chancado:
-        - prechancado
-        - nodo_3500
-        - chancado_2y3
-        - chancado_fino_3
-        - chancado_fino_4
+        - "Pre-Chancado"
+        - "Nodo 3500"
+        - "Chancado 2° y 3°"
+        - "Chancado Fino 3°"
+        - "Chancado Fino 4°"
       molienda:
-        - molienda_sag
-        - molienda_convencional
-        - molienda_cdm
+        - "Molienda SAG"
+        - "Molienda Convencional"
+        - "CDM"
       todas:
-        - prechancado
-        - nodo_3500
-        - chancado_2y3
-        - chancado_fino_3
-        - chancado_fino_4
-        - molienda_sag
-        - molienda_convencional
-        - molienda_cdm
+        - "Pre-Chancado"
+        - "Nodo 3500"
+        - "Chancado 2° y 3°"
+        - "Chancado Fino 3°"
+        - "Chancado Fino 4°"
+        - "Molienda SAG"
+        - "Molienda Convencional"
+        - "CDM"
   
   ambito:
     tipo: enum
