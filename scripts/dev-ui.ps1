@@ -53,7 +53,9 @@ if (Test-Path $envFile) {
     foreach ($pat in @(
         @{ Name = "MASTER_SECRET";   Var = "MASTER_SECRET"   },
         @{ Name = "ILLARI_IMAGE";    Var = "ILLARI_IMAGE"    },
-        @{ Name = "ILLARI_UI_IMAGE"; Var = "ILLARI_UI_IMAGE" }
+        @{ Name = "ILLARI_UI_IMAGE"; Var = "ILLARI_UI_IMAGE" },
+        # API key del LLM real (Google Gemini); m2 la consume vía docker-compose.ui.yml.
+        @{ Name = "GEMINI_API_KEY";  Var = "GEMINI_API_KEY"  }
     )) {
         $varName = $pat.Var
         if (-not (Get-Item "env:$varName" -ErrorAction SilentlyContinue)) {

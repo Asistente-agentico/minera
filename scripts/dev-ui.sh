@@ -50,6 +50,8 @@ _read_env() {
 _read_env MASTER_SECRET
 _read_env ILLARI_IMAGE
 _read_env ILLARI_UI_IMAGE
+# API key del LLM real (Google Gemini); m2 la consume vía docker-compose.ui.yml.
+_read_env GEMINI_API_KEY
 
 if [[ -z "${MASTER_SECRET:-}" ]]; then
     echo "ERROR: MASTER_SECRET no definido. Agregalo a minera/.env o exportalo antes de correr el script." >&2
