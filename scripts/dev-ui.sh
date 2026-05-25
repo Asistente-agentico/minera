@@ -57,6 +57,7 @@ if [[ "$CMD" == "up" && -f "$VERSIONES_FILE" ]]; then
     declare -A _MOD_VARS=(
         [mk]="ILLARI_MK_IMAGE"
         [ma]="ILLARI_MA_IMAGE"
+        [mv]="ILLARI_MV_IMAGE"
         [m2]="ILLARI_M2_IMAGE"
         [m3]="ILLARI_M3_IMAGE"
         [ui]="ILLARI_UI_IMAGE"
@@ -64,12 +65,13 @@ if [[ "$CMD" == "up" && -f "$VERSIONES_FILE" ]]; then
     declare -A _MOD_DEFAULTS=(
         [mk]="illari-mk:local"
         [ma]="illari-ma:local"
+        [mv]="illari-mv:local"
         [m2]="illari-m2:local"
         [m3]="illari-m3:local"
         [ui]="illari-ui:local"
     )
     FALTANTES=()
-    for MOD in mk ma m2 m3 ui; do
+    for MOD in mk ma mv m2 m3 ui; do
         VAR="${_MOD_VARS[$MOD]}"
         IMAGEN="${!VAR:-${_MOD_DEFAULTS[$MOD]}}"
         if ! docker image inspect "$IMAGEN" >/dev/null 2>&1; then

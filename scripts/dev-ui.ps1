@@ -72,6 +72,7 @@ if (($Cmd -eq "up") -and (Test-Path $versionesFile)) {
     $modImagenes = @(
         @{ Mod = "mk"; Var = "ILLARI_MK_IMAGE"; Default = "illari-mk:local" },
         @{ Mod = "ma"; Var = "ILLARI_MA_IMAGE"; Default = "illari-ma:local" },
+        @{ Mod = "mv"; Var = "ILLARI_MV_IMAGE"; Default = "illari-mv:local" },
         @{ Mod = "m2"; Var = "ILLARI_M2_IMAGE"; Default = "illari-m2:local" },
         @{ Mod = "m3"; Var = "ILLARI_M3_IMAGE"; Default = "illari-m3:local" },
         @{ Mod = "ui"; Var = "ILLARI_UI_IMAGE"; Default = "illari-ui:local"  }
