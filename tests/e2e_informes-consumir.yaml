@@ -41,7 +41,7 @@ perfiles:
     contrasena_test: "test-illari-2026"
 
   - id: tecnico_molienda
-    descripcion: "Técnico medioambiente — 3 plantas (grupo molienda)"
+    descripcion: "Técnico de Medioambiente — 3 plantas (grupo Molienda)"
     user_id: "tecnico.medioambiente.molienda@test"
     contrasena_test: "test-illari-2026"
 
@@ -114,8 +114,8 @@ escenarios:
       plantas_presentes: ["Pre-Chancado", "Chancado 2° y 3°"]
       plantas_excluidas: ["Molienda SAG", "CDM"]
 
-  # tecnico_molienda tiene planta=[molienda] → 3 plantas → 6 filas (3 × 2 años).
-  # Su ambito="medioambiente" no está en oro_p00002; dimensiones_requeridas=[planta]
+  # tecnico_molienda tiene planta=[Molienda] → 3 plantas → 6 filas (3 × 2 años).
+  # Su ambito="Medioambiente" no está en oro_p00002; dimensiones_requeridas=[planta]
   # filtra el WHERE a solo planta.
 
   - id: tecnico_grupo_molienda

@@ -21,8 +21,8 @@ regla:
   gobernanza:
     dimensiones:
       planta: column:planta
-      ambito: seguridad_ocupacional
-      clasificacion: restringido
+      ambito: "Seguridad ocupacional"
+      clasificacion: "Restringido"
     dimensiones_en_texto: []
 
   vigencia:

@@ -21,8 +21,8 @@ regla:
   gobernanza:
     dimensiones:
       planta: column:planta
-      ambito: seguridad_ocupacional
-      clasificacion: interno
+      ambito: "Seguridad ocupacional"
+      clasificacion: "Interno"
     dimensiones_en_texto: []
 
   vigencia:

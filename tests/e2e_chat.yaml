@@ -37,7 +37,7 @@ perfiles:
     contrasena_test: "test-illari-2026"
 
   - id: tecnico_medioambiente
-    descripcion: "Técnico medioambiente — planta=[molienda], ambito=[medioambiente]"
+    descripcion: "Técnico medioambiente — planta=[Molienda], ambito=[Medioambiente]"
     user_id: "tecnico.medioambiente.molienda@test"
     contrasena_test: "test-illari-2026"
 
@@ -60,7 +60,7 @@ escenarios:
         - "2.5"           # limite_interno_mg_m3 del seed semaforo_polvo_respirable
         - "peligroso"     # etiqueta_semaforo para nivel 4 (>2.5 mg/m³)
 
-  # jefe_seguridad tiene planta=["todas"] + ambito=["seguridad_ocupacional"].
+  # jefe_seguridad tiene planta=["Todas"] + ambito=["Seguridad ocupacional"].
   # Mismo acceso que auditor_ambiental para chunks de seguridad ocupacional.
   - id: P00001_M00001_sobre_limite_jefe
     perfil: jefe_seguridad
@@ -108,14 +108,14 @@ escenarios:
   # M00004: todas las mediciones de la sesión más reciente a nivel global.
   # Plantilla: "... última jornada (semana {{ semana }} de {{ anio }}): concentración
   #   {{ concentracion_mg_m3 }} mg/m³, semáforo {{ etiqueta_semaforo }} ..."
-  # operador_chancado tiene ambito=["medioambiente"]. Todos los chunks del
-  # dominio son ambito="seguridad_ocupacional" → governance falla-cerrado → 0 chunks.
+  # operador_chancado tiene ambito=["Medioambiente"]. Todos los chunks del
+  # dominio son ambito="Seguridad ocupacional" → governance falla-cerrado → 0 chunks.
   - id: P00004_M00004_ultima_jornada_operador
     perfil: operador_chancado
     texto: "¿Cómo fue la última jornada de medición?"
     espera:
       status: 200
-      max_chunks: 0   # governance bloquea por ambito (medioambiente ≠ seguridad_ocupacional)
+      max_chunks: 0   # governance bloquea por ambito (Medioambiente ≠ Seguridad ocupacional)
 
   - id: P00004_M00004_ultima_jornada_auditor
     perfil: auditor_ambiental
@@ -150,8 +150,8 @@ escenarios:
       status: 400
 
   # ── Gobernanza: ambito incorrecto ───────────────────────────────────────
-  # tecnico_medioambiente tiene planta=[molienda] + ambito=["medioambiente"].
-  # Todos los chunks del dominio son ambito="seguridad_ocupacional" →
+  # tecnico_medioambiente tiene planta=[Molienda] + ambito=["Medioambiente"].
+  # Todos los chunks del dominio son ambito="Seguridad ocupacional" →
   # governance falla-cerrado → 0 chunks, aunque el texto sea relevante.
   - id: gobernanza_ambito_incorrecto
     perfil: tecnico_medioambiente

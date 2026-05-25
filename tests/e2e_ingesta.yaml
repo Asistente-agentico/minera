@@ -29,38 +29,38 @@ reglas:
 
   # ── P00001_M00001 — Puntos sobre el límite esta semana ───────────────────
   # 17 chunks en dataset completo (una fila por punto que supera 2.5 mg/m³).
-  # clasificacion=restringido porque incluye nombres de operador y técnico.
+  # clasificacion="Restringido" porque incluye nombres de operador y técnico.
   - regla_id: P00001_M00001
     descripcion: "Puntos sobre límite esta semana"
     min_chunks: 12
     dimensiones_requeridas:
-      ambito: seguridad_ocupacional
-      clasificacion: restringido
+      ambito: "Seguridad ocupacional"
+      clasificacion: "Restringido"
     pii_claves:
       - operador
       - tecnico
 
   # ── P00002_M00002 — Resumen anual por área ───────────────────────────────
   # 16 chunks en dataset completo (una fila por planta con estadísticas anuales).
-  # clasificacion=interno sin PII declarado: pii_tokens debe ser dict vacío.
+  # clasificacion="Interno" sin PII declarado: pii_tokens debe ser dict vacío.
   - regla_id: P00002_M00002
     descripcion: "Resumen anual por área"
     min_chunks: 10
     dimensiones_requeridas:
-      ambito: seguridad_ocupacional
-      clasificacion: interno
+      ambito: "Seguridad ocupacional"
+      clasificacion: "Interno"
     pii_claves: []
 
   # ── P00003_M00003 — Condiciones del peak histórico ───────────────────────
   # 8 chunks en dataset completo (una fila por planta con el máximo histórico).
-  # clasificacion=restringido con PII extendido: operador_dni y tecnico_dni
+  # clasificacion="Restringido" con PII extendido: operador_dni y tecnico_dni
   # adicionalmente a los nombres.
   - regla_id: P00003_M00003
     descripcion: "Peak histórico por planta"
     min_chunks: 5
     dimensiones_requeridas:
-      ambito: seguridad_ocupacional
-      clasificacion: restringido
+      ambito: "Seguridad ocupacional"
+      clasificacion: "Restringido"
     pii_claves:
       - operador
       - operador_dni
@@ -69,13 +69,13 @@ reglas:
 
   # ── P00004_M00004 — Última jornada de medición ───────────────────────────
   # 26 chunks en dataset completo (todas las mediciones de la sesión más reciente).
-  # clasificacion=interno con PII básico (nombres sin DNI).
+  # clasificacion="Interno" con PII básico (nombres sin DNI).
   - regla_id: P00004_M00004
     descripcion: "Última jornada de medición"
     min_chunks: 15
     dimensiones_requeridas:
-      ambito: seguridad_ocupacional
-      clasificacion: interno
+      ambito: "Seguridad ocupacional"
+      clasificacion: "Interno"
     pii_claves:
       - operador
       - tecnico

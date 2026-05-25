@@ -54,13 +54,13 @@ dimensiones:
     tipo: enum
     nombre_ui: "Ámbito"
     # Convención: nombres_ui_grupos SOLO para grupos. Los valores concretos
-    # (Seguridad Ocupacional, Medioambiente) aparecen tal cual en BD.
+    # (Seguridad ocupacional, Medioambiente) aparecen tal cual en BD.
     valores:
-      - "Seguridad Ocupacional"
+      - "Seguridad ocupacional"
       - "Medioambiente"
     grupos:
       todos:
-        - "Seguridad Ocupacional"
+        - "Seguridad ocupacional"
         - "Medioambiente"
     nombres_ui_grupos:
       todos: "Todos"
@@ -94,7 +94,7 @@ usuarios:
     gobernanza:
       dimensiones:
         planta: ["todas"]
-        ambito: ["Seguridad Ocupacional"]
+        ambito: ["Seguridad ocupacional"]
         clasificacion: "Restringido"
 
   - user_id: "operador.chancado@test"
