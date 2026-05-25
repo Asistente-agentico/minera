@@ -11,8 +11,9 @@ dimensiones:
   planta:
     tipo: enum
     nombre_ui: "Planta"
-    # valores = strings canónicos de bronce_mediciones.sql; sin nombres_ui_valores
-    # porque los valores ya son los strings de display (match exacto con chunks).
+    # Convención: nombres_ui_valores SOLO para aliases de grupo (sin contraparte
+    # en BD). Los valores concretos deben aparecer tal cual están en la BD
+    # fuente (bronce_mediciones.sql) para match exacto contra chunks de Qdrant.
     valores:
       - "Pre-Chancado"
       - "Nodo 3500"
@@ -22,6 +23,11 @@ dimensiones:
       - "Molienda SAG"
       - "Molienda Convencional"
       - "CDM"
+
+    nombres_ui_valores:
+      chancado: "Chancado"
+      molienda: "Molienda"
+      todas: "Todas"
 
     grupos:
       chancado:
@@ -43,16 +49,17 @@ dimensiones:
         - "Molienda SAG"
         - "Molienda Convencional"
         - "CDM"
-  
+
   ambito:
     tipo: enum
     nombre_ui: "Ámbito"
+    # Convención: nombres_ui_valores SOLO para grupos. Los valores concretos
+    # (seguridad_ocupacional, medioambiente) aparecen tal cual en BD.
     valores:
       - seguridad_ocupacional
       - medioambiente
     nombres_ui_valores:
-      seguridad_ocupacional: "Seguridad ocupacional"
-      medioambiente: "Medioambiente"
+      todos: "Todos"
     grupos:
       todos:
         - seguridad_ocupacional
@@ -61,16 +68,13 @@ dimensiones:
   clasificacion:
     tipo: ordinal
     nombre_ui: "Clasificación"
+    # Sin grupos → sin nombres_ui_valores. Los valores ordinales aparecen
+    # tal cual están definidos.
     valores:
       - publico
       - interno
       - restringido
       - solo_gerencias
-    nombres_ui_valores:
-      publico: "Público"
-      interno: "Interno"
-      restringido: "Restringido"
-      solo_gerencias: "Solo gerencias"
 
 arboles_contextos:
   - id: AC0001
