@@ -172,10 +172,9 @@ echo ""
 
 ILLARI_E2E_ESCRITURA="${SUITE_ABS}" \
 ILLARI_E2E_RAIZ="${REPO_RAIZ}" \
+PYTHONUNBUFFERED=1 \
 python3 -m pytest "${TEST_PIPELINE}" -v -m e2e \
     --rootdir="${ILLARI_TESTS}/.." \
-    --ignore="${ILLARI_TESTS}/e2e_chat" \
-    --ignore="${ILLARI_TESTS}/e2e_m3" \
     | tee -a "${OUT_FILE}"
 PYTEST_EXIT="${PIPESTATUS[0]}"
 

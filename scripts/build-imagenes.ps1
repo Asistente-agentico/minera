@@ -101,11 +101,11 @@ $dockerfiles = @{
 $contextos = @{
     base = $illariDir
     mk   = $illariDir
+    mv   = $illariDir
+    m1   = $illariDir
     ma   = $illariDir
     m2   = $illariDir
     m3   = $illariDir
-    mv   = $illariDir
-    m1   = $illariDir
     ui   = (Join-Path $illariDir "customer_ui")
 }
 

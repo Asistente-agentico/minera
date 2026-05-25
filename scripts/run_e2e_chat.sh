@@ -269,6 +269,7 @@ ILLARI_E2E_SUITE="${SUITE_ABS}" \
 ILLARI_E2E_CLIENTE="${REPO_RAIZ}" \
 ILLARI_E2E_M2_URL="http://localhost:8000" \
 ILLARI_E2E_MA_URL="http://localhost:8001" \
+PYTHONUNBUFFERED=1 \
 python3 -m pytest "${TEST_SUITE}" -v -s -m e2e \
     --rootdir="${ILLARI_TESTS}/.." \
     | tee -a "${OUT_FILE}"

@@ -165,6 +165,7 @@ Write-Host ""
 
 $env:ILLARI_E2E_ESCRITURA = $suiteAbs
 $env:ILLARI_E2E_RAIZ      = $repoRaiz
+$env:PYTHONUNBUFFERED     = "1"
 
 python -m pytest $testPipeline -v -m e2e `
     --rootdir=(Join-Path $illariTests "..") |

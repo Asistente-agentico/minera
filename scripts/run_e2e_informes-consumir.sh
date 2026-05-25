@@ -67,9 +67,9 @@ if [[ ! -f "${REPO_RAIZ}/${COMPOSE_FILE}" ]]; then
 fi
 
 ILLARI_TESTS="$(dirname "$REPO_RAIZ")/Illari/tests"
-TEST_DIR="${ILLARI_TESTS}/e2e_m3"
-if [[ ! -d "$TEST_DIR" ]]; then
-    echo "Error: tests/e2e_m3/ no encontrado en ${TEST_DIR}" >&2
+TEST_FILE="${ILLARI_TESTS}/e2e_m3/test_reportes.py"
+if [[ ! -f "$TEST_FILE" ]]; then
+    echo "Error: test_reportes.py no encontrado en ${TEST_FILE}" >&2
     echo "Verifica que el repo Illari esté en $(dirname "$REPO_RAIZ")/Illari" >&2
     exit 1
 fi
@@ -159,7 +159,8 @@ ILLARI_E2E_M3="${SUITE_ABS}" \
 ILLARI_E2E_CLIENTE="${REPO_RAIZ}" \
 ILLARI_E2E_M3_URL="http://localhost:8005" \
 ILLARI_E2E_MA_URL="http://localhost:8001" \
-python3 -m pytest "${TEST_DIR}" -v -m e2e \
+PYTHONUNBUFFERED=1 \
+python3 -m pytest "${TEST_FILE}" -v -m e2e \
     --rootdir="${ILLARI_TESTS}/.." \
     | tee -a "${OUT_FILE}"
 
