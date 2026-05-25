@@ -69,7 +69,7 @@ services:
 
   ma:
     <<: *base
-    image: ${ILLARI_MA_IMAGE:-illari-ma:local}
+    image: ${ILLARI_MA_IMAGE:-illari-ma:0.1.0}
     entrypoint: uvicorn ma.api.main:app --host 0.0.0.0 --port 8001
     environment:
       CLIENTE_DIR: /cliente/minera
@@ -91,7 +91,7 @@ services:
 
   m2:
     <<: *base
-    image: ${ILLARI_M2_IMAGE:-illari-m2:local}
+    image: ${ILLARI_M2_IMAGE:-illari-m2:0.1.0}
     entrypoint:
       - sh
       - -c

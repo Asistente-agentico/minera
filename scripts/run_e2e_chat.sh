@@ -104,8 +104,8 @@ fi
 declare -A MOD_IMAGES=(
     [mk]="${ILLARI_MK_IMAGE:-illari-mk:local}"
     [mv]="${ILLARI_MV_IMAGE:-illari-mv:local}"
-    [ma]="${ILLARI_MA_IMAGE:-illari-ma:local}"
-    [m2]="${ILLARI_M2_IMAGE:-illari-m2:local}"
+    [ma]="${ILLARI_MA_IMAGE:-illari-ma:0.1.0}"
+    [m2]="${ILLARI_M2_IMAGE:-illari-m2:0.1.0}"
 )
 FALTANTES=()
 for mod in mk mv ma m2; do

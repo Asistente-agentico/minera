@@ -87,8 +87,8 @@ Write-Host "[1/3] Verificando imagenes locales..."
 $modRequeridos = @(
     @{ Mod = "mk"; Var = "ILLARI_MK_IMAGE"; Default = "illari-mk:local" },
     @{ Mod = "mv"; Var = "ILLARI_MV_IMAGE"; Default = "illari-mv:local" },
-    @{ Mod = "ma"; Var = "ILLARI_MA_IMAGE"; Default = "illari-ma:local" },
-    @{ Mod = "m2"; Var = "ILLARI_M2_IMAGE"; Default = "illari-m2:local" }
+    @{ Mod = "ma"; Var = "ILLARI_MA_IMAGE"; Default = "illari-ma:0.1.0" },
+    @{ Mod = "m2"; Var = "ILLARI_M2_IMAGE"; Default = "illari-m2:0.1.0" }
 )
 $faltantes = @()
 foreach ($m in $modRequeridos) {
