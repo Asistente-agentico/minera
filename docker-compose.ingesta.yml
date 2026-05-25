@@ -42,7 +42,9 @@ services:
     entrypoint: uvicorn mv.api.main:app --host 0.0.0.0 --port 8002
     volumes:
       - .:/cliente/minera
-      - ./datos/fastembed_cache:/home/asistente/.cache:ro
+      # RW para que fastembed pueda descargar el modelo la primera vez.
+      # Siguientes corridas reusan el cache del host sin descargar.
+      - ./datos/fastembed_cache:/home/asistente/.cache
       - qdrant_mv:/cliente/minera/datos/qdrant_mv
     depends_on:
       mk:
