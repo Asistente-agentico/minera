@@ -184,9 +184,7 @@ $env:ILLARI_E2E_CLIENTE = $repoRaiz
 $env:ILLARI_E2E_M2_URL  = "http://localhost:8000"
 $env:ILLARI_E2E_MA_URL  = "http://localhost:8001"
 
-python -m pytest $testSuite -v -s -m e2e `
-    --rootdir=(Join-Path $illariTests "..") `
-    --override-ini=testpaths= |
+python -m pytest $testSuite -v -s -m e2e |
     Tee-Object -FilePath $outFile -Append
 $pytestExit = $LASTEXITCODE
 

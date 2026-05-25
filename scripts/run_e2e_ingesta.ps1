@@ -166,9 +166,7 @@ Write-Host ""
 $env:ILLARI_E2E_ESCRITURA = $suiteAbs
 $env:ILLARI_E2E_RAIZ      = $repoRaiz
 
-python -m pytest $testPipeline -v -m e2e `
-    --rootdir=(Join-Path $illariTests "..") `
-    --override-ini=testpaths= |
+python -m pytest $testPipeline -v -m e2e |
     Tee-Object -FilePath $outFile -Append
 $pytestExit = $LASTEXITCODE
 
