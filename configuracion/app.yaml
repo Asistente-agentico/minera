@@ -3,6 +3,7 @@ version: "0.8.0"
 asistente_activo:
   id: minera_SOyM
   nombre: "Asistente de Seguridad Ocupacional y Medioambiente"
+  nombre_corto: "SOyM"
   subtitulo: "Mediciones de polvo ambiental"
   version: "0.8.0"
 
