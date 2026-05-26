@@ -24,22 +24,22 @@ perfiles:
   - id: jefe_seguridad
     descripcion: "Jefe de seguridad con acceso a datos restringidos"
     user_id: "jefe.seguridad@test"
-    contrasena_test: "test-illari-2026"
+    contrasena_test: "abc"
 
   - id: operador_chancado
     descripcion: "Operador de Pre-Chancado con acceso interno"
     user_id: "operador.chancado@test"
-    contrasena_test: "test-illari-2026"
+    contrasena_test: "abc"
 
   - id: auditor_ambiental
     descripcion: "Auditor de seguridad ocupacional, acceso a todas las plantas"
     user_id: "auditor.ambiental@test"
-    contrasena_test: "test-illari-2026"
+    contrasena_test: "abc"
 
   - id: tecnico_medioambiente
     descripcion: "Técnico medioambiente — planta=[Molienda], ambito=[Medioambiente]"
     user_id: "tecnico.medioambiente.molienda@test"
-    contrasena_test: "test-illari-2026"
+    contrasena_test: "abc"
 
 escenarios:
 

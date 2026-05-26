@@ -35,11 +35,18 @@ services:
       retries: 10
       start_period: 5s
 
+  qdrant-init:
+    image: alpine
+    command: sh -c "chmod 777 /qdrant"
+    volumes:
+      - qdrant_mv:/qdrant
+    networks: [red_illari]
+
   mv:
     <<: *base
     image: ${ILLARI_MV_IMAGE:-illari-mv:local}
-    user: "0"
     entrypoint: uvicorn mv.api.main:app --host 0.0.0.0 --port 8002
+    stop_grace_period: 8s
     volumes:
       - .:/cliente/minera
       # RW para que fastembed pueda descargar el modelo la primera vez.
@@ -49,6 +56,8 @@ services:
     depends_on:
       mk:
         condition: service_healthy
+      qdrant-init:
+        condition: service_completed_successfully
     environment:
       MK_URL: "http://mk:8003"
       CLIENTE_DIR: /cliente/minera

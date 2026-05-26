@@ -133,8 +133,27 @@ docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" down --volumes --remove-orphans
 echo ""
 
 MASTER_SECRET="${MASTER_SECRET}" \
+docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" up -d mk qdrant-init mv \
+    2>&1 | tee -a "${OUT_FILE}"
+
+echo "  Esperando que MV esté healthy..."
+for _i in $(seq 1 24); do
+    sleep 5
+    _MV_ID=$(docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" ps -q mv 2>/dev/null)
+    _STATUS=$(docker inspect "${_MV_ID}" --format '{{.State.Health.Status}}' 2>/dev/null || echo "unknown")
+    if [ "${_STATUS}" = "healthy" ]; then echo "  MV healthy (intento ${_i}/24)"; break; fi
+    if [ "${_i}" -eq 24 ]; then
+        echo "ERROR: MV no llegó a healthy en 120s" >&2
+        docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" logs mv --tail=30 >&2
+        docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" down --volumes --remove-orphans --timeout 5 2>/dev/null || true
+        exit 1
+    fi
+done
+echo ""
+
+MASTER_SECRET="${MASTER_SECRET}" \
 docker compose -f "${REPO_RAIZ}/${COMPOSE_FILE}" \
-    up --abort-on-container-exit --exit-code-from m1 \
+    run --rm --no-deps -T m1 \
     | tee -a "${OUT_FILE}"
 COMPOSE_EXIT="${PIPESTATUS[0]}"
 
@@ -142,7 +161,7 @@ COMPOSE_EXIT="${PIPESTATUS[0]}"
 echo "  Copiando BDV Qdrant del volumen Docker al host..."
 mkdir -p "$QDRANT_DIR"
 docker run --rm -v "minera_qdrant_mv:/source:ro" -v "${QDRANT_DIR}:/dest" \
-    alpine sh -c "cp -r /source/. /dest/" || \
+    alpine sh -c "cp -r /source/. /dest/ && chown -R $(id -u):$(id -g) /dest" || \
     echo "  ADVERTENCIA: copia de BDV Qdrant fallo."
 
 MASTER_SECRET="${MASTER_SECRET}" \

@@ -29,12 +29,12 @@ services:
     entrypoint: uvicorn ma.api.main:app --host 0.0.0.0 --port 8001
     environment:
       CLIENTE_DIR: /cliente/minera
-      # Hashes bcrypt (cost=4) de la contraseña de prueba 'test-illari-2026'.
+      # Hashes bcrypt (cost=4) de la contraseña de prueba 'abc'.
       # Los $$ son el escape de $ en docker compose (resultado: $2b$04$...).
-      MA_USER_HASH_amVmZS5zZWd1cmlkYWRAdGVzdA: "$$2b$$04$$S5S3tejM5JDZjzSbSPIIr.JAMtP4oMpKgT/UzzWSw3/qCS.joIaJq"
-      MA_USER_HASH_b3BlcmFkb3IuY2hhbmNhZG9AdGVzdA: "$$2b$$04$$S5S3tejM5JDZjzSbSPIIr.JAMtP4oMpKgT/UzzWSw3/qCS.joIaJq"
-      MA_USER_HASH_YXVkaXRvci5hbWJpZW50YWxAdGVzdA: "$$2b$$04$$S5S3tejM5JDZjzSbSPIIr.JAMtP4oMpKgT/UzzWSw3/qCS.joIaJq"
-      MA_USER_HASH_dGVjbmljby5tZWRpb2FtYmllbnRlQHRlc3Q: "$$2b$$04$$S5S3tejM5JDZjzSbSPIIr.JAMtP4oMpKgT/UzzWSw3/qCS.joIaJq"
+      MA_USER_HASH_amVmZS5zZWd1cmlkYWRAdGVzdA: "$$2b$$04$$KHhwnErfSc0VE1qgTp7D2.FBFo4k2J5NFHZF0g3kyFYJhgWjO2ltC"
+      MA_USER_HASH_b3BlcmFkb3IuY2hhbmNhZG9AdGVzdA: "$$2b$$04$$KHhwnErfSc0VE1qgTp7D2.FBFo4k2J5NFHZF0g3kyFYJhgWjO2ltC"
+      MA_USER_HASH_YXVkaXRvci5hbWJpZW50YWxAdGVzdA: "$$2b$$04$$KHhwnErfSc0VE1qgTp7D2.FBFo4k2J5NFHZF0g3kyFYJhgWjO2ltC"
+      MA_USER_HASH_dGVjbmljby5tZWRpb2FtYmllbnRlQHRlc3Q: "$$2b$$04$$KHhwnErfSc0VE1qgTp7D2.FBFo4k2J5NFHZF0g3kyFYJhgWjO2ltC"
     ports:
       - "8001:8001"
     healthcheck:
