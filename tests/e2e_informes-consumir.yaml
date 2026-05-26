@@ -286,3 +286,95 @@ escenarios:
       status: 200
       filas_exactas: 3
       plantas_excluidas: ["Pre-Chancado", "Nodo 3500"]
+
+  # ── Multi-formato: concentracion_anual en Excel ───────────────────────────
+
+  - id: concentracion_formato_excel
+    operacion: consumir
+    reporte: concentracion_anual
+    perfil: auditor_ambiental
+    parametros:
+      formato: excel
+    espera:
+      status: 200
+      content_type: spreadsheetml
+
+  - id: concentracion_formato_invalido
+    operacion: consumir
+    reporte: concentracion_anual
+    perfil: auditor_ambiental
+    parametros:
+      formato: pdf
+    espera:
+      status: 400
+
+  # ── Nuevos reportes: catálogo ──────────────────────────────────────────────
+
+  - id: catalogo_incluye_nuevos_reportes
+    operacion: catalogo
+    perfil: auditor_ambiental
+    espera:
+      status: 200
+      reportes_presentes:
+        - excedencias_semana
+        - peak_historico
+
+  # ── excedencias_semana: gobernanza por planta ─────────────────────────────
+  # jefe_seguridad y auditor_ambiental ven todas las plantas.
+  # operador_chancado solo ve las 5 plantas del grupo Chancado.
+  # tecnico_molienda solo ve las 3 plantas del grupo Molienda.
+
+  - id: excedencias_jefe_todas_plantas
+    operacion: consumir
+    reporte: excedencias_semana
+    perfil: jefe_seguridad
+    parametros: {}
+    espera:
+      status: 200
+      min_filas: 1
+      campos_fila: [planta, punto_evaluacion, concentracion_mg_m3]
+
+  - id: excedencias_operador_chancado
+    operacion: consumir
+    reporte: excedencias_semana
+    perfil: operador_chancado
+    parametros: {}
+    espera:
+      status: 200
+      plantas_presentes: ["Pre-Chancado"]
+      plantas_excluidas: ["Molienda SAG", "CDM"]
+
+  - id: excedencias_tecnico_molienda
+    operacion: consumir
+    reporte: excedencias_semana
+    perfil: tecnico_molienda
+    parametros: {}
+    espera:
+      status: 200
+      plantas_presentes: ["Molienda SAG"]
+      plantas_excluidas: ["Pre-Chancado", "Nodo 3500"]
+
+  # ── peak_historico: 1 fila por planta ────────────────────────────────────
+  # jefe_seguridad: 8 plantas → 8 filas.
+  # operador_chancado: 5 plantas (grupo Chancado) → 5 filas.
+
+  - id: peak_jefe_todas
+    operacion: consumir
+    reporte: peak_historico
+    perfil: jefe_seguridad
+    parametros: {}
+    espera:
+      status: 200
+      filas_exactas: 8
+      campos_fila: [planta, punto_evaluacion, concentracion_mg_m3, nivel_semaforo]
+
+  - id: peak_operador_chancado
+    operacion: consumir
+    reporte: peak_historico
+    perfil: operador_chancado
+    parametros: {}
+    espera:
+      status: 200
+      filas_exactas: 5
+      plantas_presentes: ["Pre-Chancado"]
+      plantas_excluidas: ["Molienda SAG", "CDM"]

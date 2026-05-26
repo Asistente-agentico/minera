@@ -1,0 +1,13 @@
+version: "1.0"
+reporte_id: excedencias_semana
+titulo: Puntos sobre límite — semana en curso
+descripcion: >
+  Puntos de medición que superaron el límite interno de concentración de polvo
+  respirable en la semana más reciente con datos. Fuente: modelo dbt M00001.
+  Gobernanza: filtra por planta (enum). Ver dimensiones_requeridas.
+formatos: [json, excel]
+parametros: []
+gobernanza:
+  modelo_oro: M00001
+  dimensiones_requeridas:
+    planta: column:planta

@@ -1,0 +1,14 @@
+version: "1.0"
+reporte_id: peak_historico
+titulo: Peak histórico de concentración por planta
+descripcion: >
+  Medición con la mayor concentración histórica registrada por planta, con
+  detalle completo de fecha, punto de evaluación, operador y técnico.
+  Fuente: modelo dbt M00003.
+  Gobernanza: filtra por planta (enum). Ver dimensiones_requeridas.
+formatos: [json, excel]
+parametros: []
+gobernanza:
+  modelo_oro: M00003
+  dimensiones_requeridas:
+    planta: column:planta
