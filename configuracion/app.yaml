@@ -60,9 +60,22 @@ modulos:
     endpoints: []
   talleres:
     version: "0.0.0"
-    habilitado: false
+    habilitado: true       # botón siempre activo; items individuales abajo
     base_url: null
     endpoints: []
+    items:
+      - taller_id: reportes
+        label: "Taller de reportes"
+        habilitado: false
+      - taller_id: acciones
+        label: "Taller de acciones"
+        habilitado: false
+      - taller_id: indicadores
+        label: "Taller de indicadores"
+        habilitado: false
+      - taller_id: modelos
+        label: "Taller de modelos"
+        habilitado: false
 
 proyecto_transformacion: modelos
 
