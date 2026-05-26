@@ -71,7 +71,7 @@ $cfg      = Read-VersionesYaml $versionesFile
 $registry = $cfg.registry
 $versiones = $cfg.modulos
 
-$modulosBackend = @("mk", "ma", "m2", "m3", "mv", "m1")
+$modulosBackend = @("mk", "ma", "m2", "m3", "m5", "mv", "m1")
 $todosMod       = @("base") + $modulosBackend + @("ui")
 
 if ($Modulo.Count -eq 0) {
@@ -94,6 +94,7 @@ $dockerfiles = @{
     ma   = "docker\Dockerfile.ma"
     m2   = "docker\Dockerfile.m2"
     m3   = "docker\Dockerfile.m3"
+    m5   = "docker\Dockerfile.m5"
     mv   = "docker\Dockerfile.mv"
     m1   = "docker\Dockerfile.m1"
     ui   = "customer_ui\docker\Dockerfile"
@@ -106,6 +107,7 @@ $contextos = @{
     ma   = $illariDir
     m2   = $illariDir
     m3   = $illariDir
+    m5   = $illariDir
     ui   = (Join-Path $illariDir "customer_ui")
 }
 
