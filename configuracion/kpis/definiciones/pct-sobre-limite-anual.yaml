@@ -1,5 +1,5 @@
 kpi:
-  id: pct-sobre-limite-anual
+  kpi_id: pct-sobre-limite-anual
   titulo: "% de muestras sobre límite DS 594 (anual)"
   descripcion: |
     Porcentaje de registros de concentración de polvo respirable que superaron

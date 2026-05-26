@@ -1,5 +1,5 @@
 kpi:
-  id: concentracion-maxima-ultima-jornada
+  kpi_id: concentracion-maxima-ultima-jornada
   titulo: "Concentración de polvo última jornada (por punto)"
   descripcion: |
     Concentración de polvo respirable en mg/m³ medida por punto de evaluación

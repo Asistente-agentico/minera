@@ -1,5 +1,5 @@
 kpi:
-  id: puntos-criticos-ultima-jornada
+  kpi_id: puntos-criticos-ultima-jornada
   titulo: "Puntos sobre límite en última jornada (por planta)"
   descripcion: |
     Conteo de puntos de evaluación cuya concentración superó el límite interno

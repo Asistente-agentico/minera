@@ -58,7 +58,7 @@ modulos:
     habilitado: false
     base_url: null
     endpoints: []
-  taller:
+  talleres:
     version: "0.0.0"
     habilitado: false
     base_url: null
