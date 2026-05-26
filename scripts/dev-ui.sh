@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dev-ui.sh — Levanta el stack de desarrollo de la UI (MK + MA + M2 + M3 + UI)
+# dev-ui.sh — Levanta el stack de desarrollo de la UI (MK + MA + MV + M2 + M3 + M5 + UI)
 #             con la configuracion de minera.
 #
 # Lee MASTER_SECRET desde minera/.env y delega en Illari/scripts/dev-ui.ps1
@@ -75,6 +75,7 @@ if [[ "$CMD" == "up" && ${#SVCS[@]} -eq 0 && -f "$VERSIONES_FILE" ]]; then
         [mv]="ILLARI_MV_IMAGE"
         [m2]="ILLARI_M2_IMAGE"
         [m3]="ILLARI_M3_IMAGE"
+        [m5]="ILLARI_M5_IMAGE"
         [ui]="ILLARI_UI_IMAGE"
     )
     declare -A _MOD_DEFAULTS=(
@@ -83,10 +84,11 @@ if [[ "$CMD" == "up" && ${#SVCS[@]} -eq 0 && -f "$VERSIONES_FILE" ]]; then
         [mv]="illari-mv:local"
         [m2]="illari-m2:local"
         [m3]="illari-m3:local"
+        [m5]="illari-m5:local"
         [ui]="illari-ui:local"
     )
     FALTANTES=()
-    for MOD in mk ma mv m2 m3 ui; do
+    for MOD in mk ma mv m2 m3 m5 ui; do
         VAR="${_MOD_VARS[$MOD]}"
         IMAGEN="${!VAR:-${_MOD_DEFAULTS[$MOD]}}"
         if ! docker image inspect "$IMAGEN" >/dev/null 2>&1; then
@@ -142,6 +144,8 @@ case "$CMD" in
         echo "Cliente : $REPO_RAIZ"
         echo ""
         docker compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
+        mkdir -p "$REPO_RAIZ/datos/qdrant_mv"
+        chmod 777 "$REPO_RAIZ/datos/qdrant_mv"
         docker compose -f "$COMPOSE_FILE" up --build -d
 
         echo "  Esperando MA en http://localhost:8001/health..."

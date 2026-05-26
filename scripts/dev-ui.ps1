@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Levanta el stack de desarrollo de la UI (MK + MA + M2 + M3 + UI) con la
+    Levanta el stack de desarrollo de la UI (MK + MA + MV + M2 + M3 + M5 + UI) con la
     configuracion de minera.
 
 .DESCRIPTION
@@ -84,6 +84,7 @@ if (($Cmd -eq "up") -and ($Servicios.Count -eq 0) -and (Test-Path $versionesFile
         @{ Mod = "mv"; Var = "ILLARI_MV_IMAGE"; Default = "illari-mv:local" },
         @{ Mod = "m2"; Var = "ILLARI_M2_IMAGE"; Default = "illari-m2:local" },
         @{ Mod = "m3"; Var = "ILLARI_M3_IMAGE"; Default = "illari-m3:local" },
+        @{ Mod = "m5"; Var = "ILLARI_M5_IMAGE"; Default = "illari-m5:local" },
         @{ Mod = "ui"; Var = "ILLARI_UI_IMAGE"; Default = "illari-ui:local"  }
     )
     $faltantes = @()

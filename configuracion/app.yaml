@@ -48,6 +48,21 @@ modulos:
     habilitado: true
     base_url: "http://localhost:8006"
     endpoints: []
+  ml:
+    version: "0.0.0"
+    habilitado: false
+    base_url: null
+    endpoints: []
+  en_vivo:
+    version: "0.0.0"
+    habilitado: false
+    base_url: null
+    endpoints: []
+  taller:
+    version: "0.0.0"
+    habilitado: false
+    base_url: null
+    endpoints: []
 
 proyecto_transformacion: modelos
 

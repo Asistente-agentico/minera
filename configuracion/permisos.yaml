@@ -84,6 +84,7 @@ usuarios:
     permisos:
       chat: [consumir]
       reportes: [consumir]
+      kpis: [consumir]
     gobernanza:
       dimensiones:
         planta: ["Todas"]
@@ -97,6 +98,7 @@ usuarios:
     permisos:
       chat: [consumir]
       reportes: [consumir]
+      kpis: [consumir]
     gobernanza:
       dimensiones:
         planta: ["Chancado"]
@@ -110,6 +112,7 @@ usuarios:
     permisos:
       chat: [consumir]
       reportes: [consumir]
+      kpis: [consumir]
     gobernanza:
       dimensiones:
         planta: ["Todas"]
@@ -123,6 +126,7 @@ usuarios:
     permisos:
       chat: [consumir]
       reportes: [consumir]
+      kpis: [consumir]
     gobernanza:
       dimensiones:
         planta: ["Molienda"]
