@@ -92,7 +92,7 @@ SELECT * FROM (
         md.hora_termino,
         m.col_nombre                                                             AS _col_posicion,
         '{{ snapshot_ref }}'                                                     AS _bronce_fuente,
-        current_timestamp                                                        AS _bronce_loaded_at
+        {{ utc_ahora() }}                                                        AS _bronce_loaded_at
 
     FROM mediciones m
     JOIN     semanas  s  ON m.col_nombre = s.col_nombre
