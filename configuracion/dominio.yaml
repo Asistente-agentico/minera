@@ -6,15 +6,18 @@
 
 cliente:
   cliente_id: minera_prueba
-  nombre: Minera de Chile
+  nombre_ui: Minera de Chile
   descripcion: Minera ubicada en el norte de Chile
 
 asistentes:
-  - version: "0.8.0"
-    id: minera_SOyM
-    nombre: "Asistente de Seguridad Ocupacional y Medioambiente"
+  - asistente_id: minera_SOyM
+    version: "0.8.0"
+    nombre_ui: "Asistente de Seguridad Ocupacional y Medioambiente"
+    nombre_corto_ui: "SOyM"
     subtitulo: "Mediciones de polvo ambiental"
-    descripcion: "Mediciones ambientales de polvo respirable en puntos críticos por planta de la minera"
+    descripcion: "Mediciones ambientales de polvo respirable en puntos críticos por planta de la minera."
+
+asistente_activo_inicial: minera_SOyM
 
 tenants:
   - id: minera_prueba

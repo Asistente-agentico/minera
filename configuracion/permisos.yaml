@@ -26,17 +26,17 @@ dimensiones:
       - "CDM"
 
     grupos:
-      Chancado:
+      "Plantas de chancado":
         - "Pre-Chancado"
         - "Nodo 3500"
         - "Chancado 2° y 3°"
         - "Chancado Fino 3°"
         - "Chancado Fino 4°"
-      Molienda:
+      "Plantas de molienda":
         - "Molienda SAG"
         - "Molienda Convencional"
         - "CDM"
-      Todas:
+      "Todas las plantas":
         - "Pre-Chancado"
         - "Nodo 3500"
         - "Chancado 2° y 3°"
@@ -76,9 +76,12 @@ arboles_contextos:
       - dimension: ambito
       - dimension: planta
 
-usuarios:
+users:
   - user_id: "jefe.seguridad@test"
-    nombre_ui: "Jefe de Seguridad"
+    nombre_ui: "Roberto Muñoz Arias"
+    cargo_ui: "Jefe de Seguridad"
+    lugar_trabajo: "Planta Chancado — Edificio Administrativo"
+    email: "jefe.seguridad@test"
     tipo: cliente
     arbol_id: AC0001
     permisos:
@@ -87,12 +90,15 @@ usuarios:
       kpis: [consumir]
     gobernanza:
       dimensiones:
-        planta: ["Todas"]
+        planta: ["Todas las plantas"]
         ambito: ["Seguridad ocupacional"]
         clasificacion: "Restringido"
 
   - user_id: "operador.chancado@test"
-    nombre_ui: "Operador Chancado"
+    nombre_ui: "Daniela Fuentes Rojas"
+    cargo_ui: "Operador Chancado"
+    lugar_trabajo: "Plantas de chancado — Turno A"
+    email: "operador.chancado@test"
     tipo: cliente
     arbol_id: AC0001
     permisos:
@@ -101,12 +107,15 @@ usuarios:
       kpis: [consumir]
     gobernanza:
       dimensiones:
-        planta: ["Chancado"]
+        planta: ["Plantas de chancado"]
         ambito: ["Medioambiente"]
         clasificacion: "Interno"
 
   - user_id: "auditor.ambiental@test"
-    nombre_ui: "Auditor Ambiental"
+    nombre_ui: "Patricio Soto Vera"
+    cargo_ui: "Auditor Ambiental"
+    lugar_trabajo: "Departamento de Medio Ambiente"
+    email: "auditor.ambiental@test"
     tipo: cliente
     arbol_id: AC0001
     permisos:
@@ -115,12 +124,15 @@ usuarios:
       kpis: [consumir]
     gobernanza:
       dimensiones:
-        planta: ["Todas"]
+        planta: ["Todas las plantas"]
         ambito: ["Todos"]
         clasificacion: "Restringido"
 
   - user_id: "tecnico.medioambiente.molienda@test"
-    nombre_ui: "Técnico Medioambiente Molienda"
+    nombre_ui: "Carmen Riquelme Pérez"
+    cargo_ui: "Técnico Medioambiente Molienda"
+    lugar_trabajo: "Plantas de molienda — Área SAG"
+    email: "tecnico.medioambiente.molienda@test"
     tipo: cliente
     arbol_id: AC0001
     permisos:
@@ -129,6 +141,6 @@ usuarios:
       kpis: [consumir]
     gobernanza:
       dimensiones:
-        planta: ["Molienda"]
+        planta: ["Plantas de molienda"]
         ambito: ["Medioambiente"]
         clasificacion: "Interno"

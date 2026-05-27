@@ -23,7 +23,7 @@ regla:
       planta: column:planta
       ambito: "Seguridad ocupacional"
       clasificacion: "Interno"
-    dimensiones_en_texto: []
+    dimensiones_en_texto: [ambito, clasificacion]
 
   vigencia:
     politica_vigencia: preservar

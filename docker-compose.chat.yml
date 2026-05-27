@@ -101,7 +101,7 @@ services:
       - .:/cliente/minera
       - ../Illari/m2/configuracion/schemas:/app/m2/configuracion/schemas:ro
       - ../Illari/m2/core/adaptadores/llm/factory.py:/app/m2/core/adaptadores/llm/factory.py:ro
-      - ${CHAT_YAML:-./configuracion/chat.eco.yaml}:/cliente/minera/configuracion/chat.yaml:ro
+      - ${CHAT_YAML:-./configuracion/chat/chat.eco.yaml}:/cliente/minera/configuracion/chat/chat.yaml:ro
     depends_on:
       mv-api:
         condition: service_started

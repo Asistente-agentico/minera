@@ -1,11 +1,8 @@
-version: "0.8.0"
-
-asistente_activo:
-  id: minera_SOyM
-  nombre: "Asistente de Seguridad Ocupacional y Medioambiente"
-  nombre_corto: "SOyM"
-  subtitulo: "Mediciones de polvo ambiental"
+app:
+  nombre: illari
+  nombre_ui: "Asistentes Virtuales"
   version: "0.8.0"
+  descripcion: "Asistentes virtuales desarrollados para un cliente."
 
 modulos:
   claves:
@@ -36,7 +33,7 @@ modulos:
   reportes:
     version: "0.8.0"
     habilitado: true
-    base_url: "http://localhost:8005/reportes"
+    base_url: "http://localhost:8005"
     endpoints: []
   acciones:
     version: "0.8.0"
