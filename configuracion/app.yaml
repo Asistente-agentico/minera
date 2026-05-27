@@ -3,6 +3,7 @@ app:
   nombre_ui: "Asistentes Virtuales"
   version: "0.8.0"
   descripcion: "Asistentes virtuales desarrollados para un cliente."
+  idiomas_disponibles: ["es_CL", "en_US", "pt_BR"]
 
 modulos:
   claves:

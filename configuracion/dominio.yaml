@@ -19,6 +19,9 @@ asistentes:
 
 asistente_activo_inicial: minera_SOyM
 
+zona_horaria: "America/Santiago"
+idioma: "es_CL"
+
 tenants:
   - id: minera_prueba
     nombre: Minera de Chile
