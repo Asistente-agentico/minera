@@ -24,6 +24,8 @@ def main() -> None:
     raiz = args.raiz.resolve()
 
     aterrizaje_path = raiz / "configuracion" / "aterrizaje.yaml"
+    if not aterrizaje_path.exists():
+        aterrizaje_path = raiz / "modelos" / "aterrizaje.yaml"
     db_path = raiz / "datos" / "minera.duckdb"
 
     cfg = yaml.safe_load(aterrizaje_path.read_text())
