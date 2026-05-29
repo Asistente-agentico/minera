@@ -116,6 +116,18 @@ Write-Host "[2/3] Ejecutando pipeline MK -> MV -> M1 via docker compose..."
 Write-Host ""
 
 $qdrantDir = Join-Path $repoRaiz "datos\qdrant_mv"
+
+# Snapshot pre-pipeline ANTES del wipe: captura conteos de tablas del
+# medallon y chunk_ids de la BDV de la corrida anterior. Permite al
+# reporte final distinguir "nuevos" vs "reemplazos" y mostrar deltas.
+$preSnapshot = Join-Path $outDir "snapshot-pre-$ts.json"
+Write-Host "  Capturando snapshot pre-pipeline en $preSnapshot..."
+python (Join-Path $repoRaiz "scripts\reportar_ingesta.py") snapshot `
+    --raiz $repoRaiz --salida $preSnapshot
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "  ADVERTENCIA: snapshot pre fallo (exit $LASTEXITCODE); reporte mostrara antes=0." -ForegroundColor Yellow
+}
+
 Write-Host "  Limpiando $qdrantDir y volumen Docker..."
 if (Test-Path $qdrantDir) {
     Remove-Item -Recurse -Force $qdrantDir
@@ -195,6 +207,14 @@ if (-not (Test-Path $chunksJson)) {
 Write-Host ""
 Write-Host "  Pipeline completado. chunks_generados_dev.json generado y chunks en BDV."
 Write-Host ""
+
+# Reporte de metricas: tablas del medallon (antes/ahora/delta), chunks
+# por regla y cambios en la BDV (nuevos/reemplazos/finales). Sale a stdout
+# y a $outFile via Tee-Object.
+$env:PYTHONUNBUFFERED = "1"
+python (Join-Path $repoRaiz "scripts\reportar_ingesta.py") reporte `
+    --raiz $repoRaiz --pre $preSnapshot |
+    Tee-Object -FilePath $outFile -Append
 
 # -- Fase 3: pytest local ----------------------------------------------------
 Write-Host "[3/3] Validando chunks_generados_dev.json con pytest..."

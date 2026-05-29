@@ -121,6 +121,14 @@ echo "[2/3] Ejecutando pipeline MK -> MV -> M1 via docker compose..."
 echo ""
 
 QDRANT_DIR="${REPO_RAIZ}/datos/qdrant_mv"
+
+# Snapshot pre-pipeline ANTES del wipe (ver explicacion en .ps1).
+PRE_SNAPSHOT="${OUT_DIR}/snapshot-pre-${TS}.json"
+echo "  Capturando snapshot pre-pipeline en ${PRE_SNAPSHOT}..."
+python3 "${REPO_RAIZ}/scripts/reportar_ingesta.py" snapshot \
+    --raiz "$REPO_RAIZ" --salida "$PRE_SNAPSHOT" \
+    || echo "  ADVERTENCIA: snapshot pre fallo; reporte mostrara antes=0."
+
 echo "  Limpiando ${QDRANT_DIR} y volumen Docker..."
 if [[ -d "$QDRANT_DIR" ]]; then
     rm -rf "$QDRANT_DIR"
@@ -182,6 +190,12 @@ fi
 echo ""
 echo "  Pipeline completado. chunks_generados_dev.json generado y chunks en BDV."
 echo ""
+
+# Reporte de metricas: tablas del medallon, chunks por regla, cambios BDV.
+PYTHONUNBUFFERED=1 \
+python3 "${REPO_RAIZ}/scripts/reportar_ingesta.py" reporte \
+    --raiz "$REPO_RAIZ" --pre "$PRE_SNAPSHOT" \
+    | tee -a "${OUT_FILE}"
 
 # ---------------------------------------------------------------------------
 # Fase 3 — Validacion local con pytest
