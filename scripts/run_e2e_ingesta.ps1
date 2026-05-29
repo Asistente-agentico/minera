@@ -126,7 +126,44 @@ if (Test-Path $qdrantDir) {
 try { docker compose -f $composeAbs down --volumes --remove-orphans 2>$null | Out-Null } catch { }
 Write-Host ""
 
-docker compose -f $composeAbs up --abort-on-container-exit --exit-code-from m1 |
+# Levantar mk + qdrant-init + mv en background. Usar `up -d` (no
+# `--abort-on-container-exit`) porque qdrant-init es un init container
+# que termina con exit 0 inmediatamente; `--abort-on-container-exit` lo
+# interpreta como senal para matar todo (incluyendo mk con SIGKILL 137).
+# m1 se ejecuta despues como oneshot via `compose run`, paralelo a .sh.
+docker compose -f $composeAbs up -d mk qdrant-init mv |
+    Tee-Object -FilePath $outFile -Append
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "FAILED: docker compose up -d mk qdrant-init mv exit $LASTEXITCODE" -ForegroundColor Red
+    try { docker compose -f $composeAbs down --volumes --remove-orphans 2>$null | Out-Null } catch { }
+    exit $LASTEXITCODE
+}
+
+Write-Host "  Esperando que MV este healthy..."
+$mvOk = $false
+for ($i = 1; $i -le 24; $i++) {
+    Start-Sleep -Seconds 5
+    $mvId = docker compose -f $composeAbs ps -q mv 2>$null
+    if ($mvId) {
+        $status = docker inspect $mvId --format '{{.State.Health.Status}}' 2>$null
+        if ($status -eq "healthy") {
+            Write-Host "  MV healthy (intento $i/24)"
+            $mvOk = $true
+            break
+        }
+    }
+}
+if (-not $mvOk) {
+    Write-Host "FAILED: MV no llego a healthy en 120s" -ForegroundColor Red
+    docker compose -f $composeAbs logs mv --tail=30 | Tee-Object -FilePath $outFile -Append
+    try { docker compose -f $composeAbs down --volumes --remove-orphans 2>$null | Out-Null } catch { }
+    exit 1
+}
+Write-Host ""
+
+# Ejecutar m1 como oneshot. `run --rm --no-deps -T` no toca los servicios
+# en background; el exit code de m1 es el del comando.
+docker compose -f $composeAbs run --rm --no-deps -T m1 |
     Tee-Object -FilePath $outFile -Append
 $composeExit = $LASTEXITCODE
 
