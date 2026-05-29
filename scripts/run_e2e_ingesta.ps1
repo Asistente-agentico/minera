@@ -204,8 +204,13 @@ $env:ILLARI_E2E_ESCRITURA = $suiteAbs
 $env:ILLARI_E2E_RAIZ      = $repoRaiz
 $env:PYTHONUNBUFFERED     = "1"
 
+# `Split-Path -Parent` resuelve a Illari/ sin componentes `..`. Si se pasa
+# `--rootdir=Illari\tests\..` (sin resolver), pytest 9.x trata el path
+# explicito de forma distinta y termina coleccionando todo el repo en lugar
+# de solo el archivo dado.
+$illariRaiz = Split-Path -Parent $illariTests
 python -m pytest $testPipeline -v -m e2e `
-    --rootdir=(Join-Path $illariTests "..") |
+    --rootdir=$illariRaiz |
     Tee-Object -FilePath $outFile -Append
 $pytestExit = $LASTEXITCODE
 

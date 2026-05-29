@@ -185,8 +185,11 @@ $env:ILLARI_E2E_M2_URL  = "http://localhost:8000"
 $env:ILLARI_E2E_MA_URL  = "http://localhost:8001"
 $env:PYTHONUNBUFFERED   = "1"
 
+# Path resuelto sin `..` (pytest 9.x cambia comportamiento con paths
+# `Illari\tests\..`; ver fix en run_e2e_ingesta.ps1).
+$illariRaiz = Split-Path -Parent $illariTests
 python -m pytest $testSuite -v -s -m e2e `
-    --rootdir=(Join-Path $illariTests "..") |
+    --rootdir=$illariRaiz |
     Tee-Object -FilePath $outFile -Append
 $pytestExit = $LASTEXITCODE
 
