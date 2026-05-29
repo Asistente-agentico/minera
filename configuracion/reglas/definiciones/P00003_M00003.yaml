@@ -11,7 +11,7 @@ regla:
 
   chunk_id:
     columns: [planta]
-    separator: "_"
+    separator: " "
 
   privacidad:
     pii_estrategia: tokens
