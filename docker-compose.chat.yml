@@ -26,10 +26,25 @@ x-base: &base
 
 services:
 
+  qdrant-init:
+    image: alpine
+    # Inicializa el volumen con permisos correctos para usuario no-root (UID 1000).
+    # Si la BD no existe, Alpine la crea con permisos apropiados.
+    command: sh -c "mkdir -p /qdrant && chown 1000:1000 /qdrant && chmod 755 /qdrant"
+    volumes:
+      - qdrant_mv:/qdrant
+    networks: [red_illari]
+
   mk:
     <<: *base
     image: ${ILLARI_MK_IMAGE:-illari-mk:local}
     entrypoint: python -m mk.api.main
+    deploy:
+      resources:
+        limits:
+          memory: 2.5G
+        reservations:
+          memory: 1.5G
     environment:
       MASTER_SECRET: ${MASTER_SECRET}
       MK_PORT: "8003"
@@ -45,12 +60,21 @@ services:
     <<: *base
     image: ${ILLARI_MV_IMAGE:-illari-mv:local}
     entrypoint: uvicorn mv.api.main:app --host 0.0.0.0 --port 8002
+    deploy:
+      resources:
+        limits:
+          memory: 1.8G
+        reservations:
+          memory: 1.2G
     volumes:
       - .:/cliente/minera
       - ./datos/fastembed_cache:/home/asistente/.cache:ro
+      - qdrant_mv:/cliente/minera/datos/qdrant_mv
     depends_on:
       mk:
         condition: service_healthy
+      qdrant-init:
+        condition: service_completed_successfully
     ports:
       - "8002:8002"
     environment:
@@ -70,6 +94,12 @@ services:
     <<: *base
     image: ${ILLARI_MA_IMAGE:-illari-ma:0.1.1}
     entrypoint: uvicorn ma.api.main:app --host 0.0.0.0 --port 8001
+    deploy:
+      resources:
+        limits:
+          memory: 600M
+        reservations:
+          memory: 400M
     environment:
       CLIENTE_DIR: /cliente/minera
       # Hashes bcrypt (cost=4) de la contraseña de prueba 'abc'.
@@ -91,6 +121,12 @@ services:
   m2:
     <<: *base
     image: ${ILLARI_M2_IMAGE:-illari-m2:0.1.1}
+    deploy:
+      resources:
+        limits:
+          memory: 1.2G
+        reservations:
+          memory: 800M
     entrypoint:
       - sh
       - -c
@@ -125,3 +161,6 @@ services:
 networks:
   red_illari:
     driver: bridge
+
+volumes:
+  qdrant_mv:

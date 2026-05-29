@@ -24,6 +24,12 @@ services:
     <<: *base
     image: ${ILLARI_MK_IMAGE:-illari-mk:local}
     entrypoint: python -m mk.api.main
+    deploy:
+      resources:
+        limits:
+          memory: 2.5G
+        reservations:
+          memory: 1.5G
     environment:
       MASTER_SECRET: ${MASTER_SECRET}
       MK_PORT: "8003"
@@ -37,7 +43,9 @@ services:
 
   qdrant-init:
     image: alpine
-    command: sh -c "chmod 777 /qdrant"
+    # Inicializa el volumen con permisos correctos para usuario no-root (UID 1000).
+    # Si la BD no existe, Alpine la crea con permisos apropiados.
+    command: sh -c "mkdir -p /qdrant && chown 1000:1000 /qdrant && chmod 755 /qdrant"
     volumes:
       - qdrant_mv:/qdrant
     networks: [red_illari]
@@ -47,6 +55,12 @@ services:
     image: ${ILLARI_MV_IMAGE:-illari-mv:local}
     entrypoint: uvicorn mv.api.main:app --host 0.0.0.0 --port 8002
     stop_grace_period: 8s
+    deploy:
+      resources:
+        limits:
+          memory: 1.8G
+        reservations:
+          memory: 1.2G
     volumes:
       - .:/cliente/minera
       # RW para que fastembed pueda descargar el modelo la primera vez.
@@ -74,6 +88,12 @@ services:
   m1:
     <<: *base
     image: ${ILLARI_M1_IMAGE:-illari-m1:local}
+    deploy:
+      resources:
+        limits:
+          memory: 1.8G
+        reservations:
+          memory: 1.2G
     entrypoint:
       - sh
       - -c
