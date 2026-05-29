@@ -10,7 +10,7 @@ regla:
     descripcion: "Puntos de medición que superaron el límite interno (2,5 mg/m³) en la semana vigente, con semáforo de concentración."
 
   chunk_id:
-    columns: [planta, punto_evaluacion, semana]
+    columns: [planta, punto_evaluacion, semana, anio]
     separator: "_"
 
   privacidad:

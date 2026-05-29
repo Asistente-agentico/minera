@@ -10,7 +10,7 @@ regla:
     descripcion: "Resumen anual de polvo respirable por planta: concentración promedio, máxima y mínima, y registros que superaron el límite interno."
 
   chunk_id:
-    columns: [planta, anio]
+    columns: [planta, anio, semanas_medidas, semanas_label, puntos_medidos, puntos_label]
     separator: "_"
 
   privacidad:
