@@ -1,9 +1,10 @@
-# Identidad del producto/plataforma (rediseño UI shell, TopBar izq):
-# Independiente del asistente activo seleccionado.
+# Identidad del producto/plataforma (TopBar izq). Independiente del
+# asistente activo seleccionado.
+# `nombre` = slug interno (no se muestra en UI).
+# `nombre_ui` = texto del TopBar; admite wrap a 2 líneas si es largo.
 app:
   nombre: illari
-  nombre_ui: "Asistentes Virtuales"
-  subtitulo: "Suite de productos"
+  nombre_ui: "Asistentes Virtuales de Minera"
   version: "0.8.0"
   descripcion: "Asistentes virtuales desarrollados para un cliente."
   idiomas_disponibles: ["es_CL", "en_US", "pt_BR"]

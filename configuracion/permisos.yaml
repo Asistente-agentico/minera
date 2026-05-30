@@ -77,11 +77,14 @@ arboles_contextos:
       - dimension: planta
 
 users:
+  # user_subtitle (opcional): "cargo" (default) muestra cargo_ui bajo el
+  # nombre en el TopBar; "lugar" muestra lugar_trabajo. Per-usuario.
   - user_id: "jefe.seguridad@test"
     nombre_ui: "Roberto Muñoz Arias"
     cargo_ui: "Jefe de Seguridad"
     lugar_trabajo: "Planta Chancado — Edificio Administrativo"
     email: "jefe.seguridad@test"
+    user_subtitle: cargo
     tipo: cliente
     arbol_id: AC0001
     permisos:
