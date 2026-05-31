@@ -26,6 +26,8 @@ con_hash AS (
     SELECT
         {{ huella_registro(['planta', 'punto_evaluacion', 'anio', 'semana']) }}             AS huella_registro,
         {{ huella_contenido(['concentracion_mg_m3', 'fecha', 'hora_inicio', 'hora_termino']) }} AS _huella_contenido,
+        -- variable_id identifica la variable medida; hardcodeado hasta que exista una 2ª variable
+        '01KSXY0NV10SKHS01HFYHV2YCX'                                                      AS variable_id,
         concentracion_mg_m3,
         fecha,
         hora_inicio,

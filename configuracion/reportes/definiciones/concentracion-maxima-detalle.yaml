@@ -1,0 +1,11 @@
+reporte:
+  reporte_id: concentracion-maxima-detalle
+  titulo: "Detalle de concentraciones — última jornada"
+  descripcion: |
+    Todas las mediciones de la última jornada de medición con nivel de severidad,
+    etiqueta y color materializados desde las bandas versionadas (ADR-019).
+  formatos: [json, excel]
+  gobernanza:
+    modelo_oro: M00004
+    dimensiones_requeridas:
+      column:planta: planta

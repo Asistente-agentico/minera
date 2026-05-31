@@ -31,6 +31,27 @@ seeds:
   minera_prueba:
     +schema: semillas
     +tags: ["dominio:minera_prueba"]
+    variable_monitoreada:
+      +column_types:
+        version: integer
+        vigencia_desde: integer
+        vigencia_hasta: integer
+    limites_normativos:
+      +column_types:
+        limite: double
+        version: integer
+        vigencia_desde: integer
+        vigencia_hasta: integer
+    bandas_severidad:
+      +column_types:
+        version: integer
+        vigencia_desde: integer
+        vigencia_hasta: integer
+    banda_severidad_nivel:
+      +column_types:
+        nivel: integer
+        limite_inf: double
+        limite_sup: double
 
 snapshots:
   minera_prueba:

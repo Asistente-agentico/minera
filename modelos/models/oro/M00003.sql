@@ -3,6 +3,8 @@
     Incluye: fecha, operador, técnico, horario, punto de medición exacto.
     Chunk: uno por planta con el detalle completo de su peak histórico.
     Temporal policy: vigente (siempre el peak más alto conocido).
+
+    Severidad: JOIN punto-en-el-tiempo contra bandas_severidad versionadas (ADR-019).
 -#}
 {{
     config(
@@ -10,10 +12,16 @@
     )
 }}
 
-WITH limite_interno AS (
-    SELECT MIN(concentracion_min_mg_m3) AS mg_m3
-    FROM {{ ref('semaforo_polvo_respirable') }}
-    WHERE es_sobre_limite_interno = true
+WITH limite_vigente AS (
+    SELECT ln.limite AS mg_m3
+    FROM {{ ref('limites_normativos') }} ln
+    WHERE ln.variable_id = '01KSXY0NV10SKHS01HFYHV2YCX'
+      AND ln.fuente_tipo = 'legal'
+      AND ln.vigencia_desde <= (SELECT MAX(anio * 100 + semana) FROM {{ ref('silver_entidad_sesion_medicion') }})
+      AND (ln.vigencia_hasta = -1
+           OR (SELECT MAX(anio * 100 + semana) FROM {{ ref('silver_entidad_sesion_medicion') }}) <= ln.vigencia_hasta)
+    ORDER BY ln.version DESC
+    LIMIT 1
 ),
 
 ranked AS (
@@ -74,7 +82,7 @@ SELECT
     cp.anio,
     cp.semana,
     cp.concentracion_mg_m3,
-    ROUND(cp.concentracion_mg_m3 / li.mg_m3, 2)    AS veces_sobre_limite,
+    ROUND(cp.concentracion_mg_m3 / li.mg_m3, 2) AS veces_sobre_limite,
     cp.fecha,
     cp.hora_inicio,
     cp.hora_termino,
@@ -82,14 +90,20 @@ SELECT
     cp.operador_dni,
     cp.tecnico,
     cp.tecnico_dni,
-    li.mg_m3                                        AS limite_interno_mg_m3,
-    s.nivel                                         AS nivel_semaforo,
-    s.color                                         AS color_semaforo,
-    s.etiqueta                                      AS etiqueta_semaforo
+    li.mg_m3                                      AS limite_interno_mg_m3,
+    bn.nivel,
+    bn.etiqueta,
+    bn.color,
+    bh.version                                    AS version_umbral
 FROM con_personas cp
-CROSS JOIN limite_interno li
-LEFT JOIN {{ ref('semaforo_polvo_respirable') }} s
-    ON cp.concentracion_mg_m3 >= s.concentracion_min_mg_m3
-    AND (cp.concentracion_mg_m3 < s.concentracion_max_mg_m3
-         OR s.concentracion_max_mg_m3 IS NULL)
+CROSS JOIN limite_vigente li
+LEFT JOIN {{ ref('bandas_severidad') }} bh
+    ON bh.variable_id = '01KSXY0NV10SKHS01HFYHV2YCX'
+   AND bh.criterio = 'absoluto'
+   AND bh.vigencia_desde <= (cp.anio * 100 + cp.semana)
+   AND (bh.vigencia_hasta = -1 OR (cp.anio * 100 + cp.semana) <= bh.vigencia_hasta)
+LEFT JOIN {{ ref('banda_severidad_nivel') }} bn
+    ON bn.bandas_severidad_id = bh.bandas_severidad_id
+   AND cp.concentracion_mg_m3 >= bn.limite_inf
+   AND (cp.concentracion_mg_m3 < bn.limite_sup OR bn.limite_sup IS NULL)
 ORDER BY cp.planta
