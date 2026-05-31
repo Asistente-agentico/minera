@@ -1,9 +1,12 @@
 {#-
     P00004 — Todas las mediciones de la última jornada de medición global.
     "Última jornada" = sesión con MAX(anio*100+semana) a nivel de todas las plantas.
-    Incluye todos los puntos medidos, con y sin exceso del límite.
+    Incluye todos los puntos medidos, con y sin exceso del límite normativo.
     Chunk: uno por planta+punto_evaluacion.
     Temporal policy: vigente (siempre la jornada más reciente conocida).
+
+    Severidad: JOIN punto-en-el-tiempo contra bandas_severidad versionadas (ADR-019).
+    Vigencia: vigencia_desde <= sesion_max AND (vigencia_hasta = -1 OR sesion_max <= vigencia_hasta).
 -#}
 {{
     config(
@@ -11,15 +14,37 @@
     )
 }}
 
-WITH limite_interno AS (
-    SELECT MIN(concentracion_min_mg_m3) AS mg_m3
-    FROM {{ ref('semaforo_polvo_respirable') }}
-    WHERE es_sobre_limite_interno = true
-),
-
-ultima_sesion_global AS (
+WITH ultima_sesion_global AS (
     SELECT MAX(anio * 100 + semana) AS sesion_max
     FROM {{ ref('silver_entidad_sesion_medicion') }}
+),
+
+-- Límite normativo vigente en la última jornada
+limite_vigente AS (
+    SELECT ln.limite AS mg_m3
+    FROM {{ ref('limites_normativos') }} ln
+    JOIN ultima_sesion_global u
+      ON ln.vigencia_desde <= u.sesion_max
+     AND (ln.vigencia_hasta = -1 OR u.sesion_max <= ln.vigencia_hasta)
+    WHERE ln.variable_id = '01KSXY0NV10SKHS01HFYHV2YCX'
+      AND ln.fuente_tipo = 'legal'
+    ORDER BY ln.version DESC
+    LIMIT 1
+),
+
+-- Banda de severidad vigente en la última jornada
+banda_vigente AS (
+    SELECT
+        bh.bandas_severidad_id,
+        bh.version AS version_umbral
+    FROM {{ ref('bandas_severidad') }} bh
+    JOIN ultima_sesion_global u
+      ON bh.vigencia_desde <= u.sesion_max
+     AND (bh.vigencia_hasta = -1 OR u.sesion_max <= bh.vigencia_hasta)
+    WHERE bh.variable_id = '01KSXY0NV10SKHS01HFYHV2YCX'
+      AND bh.criterio = 'absoluto'
+    ORDER BY bh.version DESC
+    LIMIT 1
 ),
 
 mediciones AS (
@@ -81,13 +106,15 @@ SELECT
     cp.operador,
     cp.tecnico,
     li.mg_m3                                                          AS limite_interno_mg_m3,
-    s.nivel                                                           AS nivel_semaforo,
-    s.color                                                           AS color_semaforo,
-    s.etiqueta                                                        AS etiqueta_semaforo
+    bn.nivel,
+    bn.etiqueta,
+    bn.color,
+    bv.version_umbral
 FROM con_personas cp
-CROSS JOIN limite_interno li
-LEFT JOIN {{ ref('semaforo_polvo_respirable') }} s
-    ON cp.concentracion_mg_m3 >= s.concentracion_min_mg_m3
-    AND (cp.concentracion_mg_m3 < s.concentracion_max_mg_m3
-         OR s.concentracion_max_mg_m3 IS NULL)
+CROSS JOIN limite_vigente li
+CROSS JOIN banda_vigente bv
+LEFT JOIN {{ ref('banda_severidad_nivel') }} bn
+    ON bn.bandas_severidad_id = bv.bandas_severidad_id
+   AND cp.concentracion_mg_m3 >= bn.limite_inf
+   AND (cp.concentracion_mg_m3 < bn.limite_sup OR bn.limite_sup IS NULL)
 ORDER BY cp.concentracion_mg_m3 DESC

@@ -1,0 +1,6 @@
+bandas_severidad_id,nivel,limite_inf,limite_sup,etiqueta,color
+01KSXY0NV1QJ4J7E61X4WJ8NPY,1,0.00,0.25,bajo,azul
+01KSXY0NV1QJ4J7E61X4WJ8NPY,2,0.25,0.50,controlado,verde
+01KSXY0NV1QJ4J7E61X4WJ8NPY,3,0.50,2.50,alerta,amarillo
+01KSXY0NV1QJ4J7E61X4WJ8NPY,4,2.50,5.00,peligroso,rojo
+01KSXY0NV1QJ4J7E61X4WJ8NPY,5,5.00,,critico,negro

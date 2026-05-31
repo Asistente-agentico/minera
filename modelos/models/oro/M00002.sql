@@ -11,10 +11,16 @@
     )
 }}
 
-WITH limite_interno AS (
-    SELECT MIN(concentracion_min_mg_m3) AS mg_m3
-    FROM {{ ref('semaforo_polvo_respirable') }}
-    WHERE es_sobre_limite_interno = true
+WITH limite_vigente AS (
+    SELECT ln.limite AS mg_m3
+    FROM {{ ref('limites_normativos') }} ln
+    WHERE ln.variable_id = '01KSXY0NV10SKHS01HFYHV2YCX'
+      AND ln.fuente_tipo = 'legal'
+      AND ln.vigencia_desde <= (SELECT MAX(anio * 100 + semana) FROM {{ ref('silver_entidad_sesion_medicion') }})
+      AND (ln.vigencia_hasta = -1
+           OR (SELECT MAX(anio * 100 + semana) FROM {{ ref('silver_entidad_sesion_medicion') }}) <= ln.vigencia_hasta)
+    ORDER BY ln.version DESC
+    LIMIT 1
 ),
 
 base AS (
@@ -49,6 +55,6 @@ SELECT
     li.mg_m3                                              AS limite_interno_mg_m3
 
 FROM base b
-CROSS JOIN limite_interno li
+CROSS JOIN limite_vigente li
 GROUP BY b.planta, b.anio, li.mg_m3
 ORDER BY pct_sobre_limite DESC, concentracion_promedio_mg_m3 DESC

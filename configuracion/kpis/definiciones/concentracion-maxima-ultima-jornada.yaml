@@ -5,6 +5,13 @@ kpi:
     Mayor concentración de polvo respirable medida por punto de evaluación
     en la última jornada de medición.
   unidad: "mg/m³"
+  bandas_severidad_id: "01KSXY0NV1QJ4J7E61X4WJ8NPY"
+  etiqueta_grupos:
+    meta:   [bajo, controlado]
+    riesgo: [alerta]
+    fuera:  [peligroso, critico]
+  reporte_id: concentracion-maxima-detalle
+  # umbral y severidad deprecated — el mart materializa nivel/etiqueta/color (ADR-019)
   umbral: 3.0
   severidad:
     - rango: [null, 1.99]
@@ -21,6 +28,9 @@ kpi:
     - {campo: limite_interno_mg_m3, etiqueta: "Límite",              orden: 5, formato: numero, unidad: "mg/m³"}
     - {campo: anio,                 etiqueta: "Año",                 orden: 6, formato: entero}
     - {campo: semana,               etiqueta: "Semana",              orden: 7, formato: entero}
+    - {campo: etiqueta,             etiqueta: "Severidad",           orden: 8, formato: texto, visible: false}
+    - {campo: color,                etiqueta: "Color",               orden: 9, formato: texto, visible: false}
+    - {campo: version_umbral,       etiqueta: "Versión umbral",      orden: 10, formato: entero, visible: false}
   gobernanza:
     modelo_oro: M00004
     dimensiones_requeridas: [planta]

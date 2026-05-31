@@ -1,0 +1,78 @@
+version: 2
+
+seeds:
+  - name: variable_monitoreada
+    description: "Catálogo de variables monitoreadas (ADR-019)."
+    columns:
+      - name: variable_id
+        tests: [not_null, unique]
+      - name: nombre_ui
+        tests: [not_null]
+      - name: version
+        tests: [not_null]
+      - name: vigencia_desde
+        tests: [not_null]
+
+  - name: limites_normativos
+    description: "Límites normativos vigentes por variable (ADR-019)."
+    columns:
+      - name: limite_id
+        tests: [not_null, unique]
+      - name: variable_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('variable_monitoreada')
+              field: variable_id
+      - name: limite
+        tests: [not_null]
+      - name: fuente_tipo
+        tests:
+          - not_null
+          - accepted_values:
+              values: [legal, normativo, estandar, interno]
+      - name: version
+        tests: [not_null]
+      - name: vigencia_desde
+        tests: [not_null]
+
+  - name: bandas_severidad
+    description: "Cabecera de bandas de severidad versionadas (ADR-019)."
+    columns:
+      - name: bandas_severidad_id
+        tests: [not_null, unique]
+      - name: variable_id
+        tests:
+          - relationships:
+              to: ref('variable_monitoreada')
+              field: variable_id
+      - name: criterio
+        tests:
+          - not_null
+          - accepted_values:
+              values: [absoluto, relativo]
+      - name: version
+        tests: [not_null]
+      - name: vigencia_desde
+        tests: [not_null]
+
+  - name: banda_severidad_nivel
+    description: "Niveles de cada banda de severidad (ADR-019)."
+    tests:
+      - bandas_sin_huecos:
+          id_col: bandas_severidad_id
+    columns:
+      - name: bandas_severidad_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('bandas_severidad')
+              field: bandas_severidad_id
+      - name: nivel
+        tests: [not_null]
+      - name: limite_inf
+        tests: [not_null]
+      - name: etiqueta
+        tests: [not_null]
+      - name: color
+        tests: [not_null]
