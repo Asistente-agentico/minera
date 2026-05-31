@@ -1,10 +1,10 @@
 kpi:
   kpi_id: pct-sobre-limite-anual
-  titulo: "% de muestras sobre límite DS 594 (anual)"
+  titulo: "% de mediciones sobre el límite (anual)"
   descripcion: |
-    Porcentaje de registros de concentración de polvo respirable que superaron
-    el límite interno DS 594, desagregado por planta y año.
-    Fuente: modelo oro M00002. Escala 0–100 (valor 5.3 = 5.3%).
+    Porcentaje de mediciones del año que superan el límite permitido (DS 594),
+    por planta.
+  unidad: "%"
   umbral: 5.0
   severidad:
     - rango: [null, 4.9]
@@ -13,6 +13,13 @@ kpi:
       nivel: warning
     - rango: [15.0, null]
       nivel: critico
+  columnas:
+    - {campo: planta,                 etiqueta: "Planta",                orden: 1, formato: texto}
+    - {campo: anio,                   etiqueta: "Año",                   orden: 2, formato: entero}
+    - {campo: valor_actual,           etiqueta: "% sobre límite",        orden: 3, formato: porcentaje, unidad: "%"}
+    - {campo: registros_sobre_limite, etiqueta: "Mediciones sobre límite", orden: 4, formato: entero}
+    - {campo: total_registros,        etiqueta: "Mediciones totales",    orden: 5, formato: entero}
+    - {campo: limite_interno_mg_m3,   etiqueta: "Límite",                orden: 6, formato: numero, unidad: "mg/m³"}
   gobernanza:
     modelo_oro: M00002
     dimensiones_requeridas: [planta]
